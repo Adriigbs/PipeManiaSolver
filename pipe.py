@@ -114,6 +114,13 @@ class PipeMania(Problem):
 '''
 
 
+'''
+First thought on veryfing if the board is solved: If given any square, we can reach every other square in the board.
+'''
+
+
+
+
 
 # Teste da classe Board
 board = Board.parse_instance()
