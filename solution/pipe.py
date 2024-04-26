@@ -40,8 +40,8 @@ class Board:
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
-        # TODO
-        pass
+        return self.grid[row][col]
+        
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """ Devolve os valores imediatamente acima e abaixo,
@@ -123,8 +123,105 @@ class PipeMania(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        # TODO
-        pass
+        board = state.board
+
+        up = ["BB", "BE", "BD", "VB", "VE", "LV", "FB"]         # Peças que encaixam com peça com abertura virada pra cima
+        down = ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]       # Peças que encaixam com peça com abertura virada pra baixo
+        left = ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]       # Peças que encaixam com peça com abertura virada pra esquerda
+        right = ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]      # Peças que encaixam com peça com abertura virada pra direita
+
+
+        # Verificar se todas as peças encaixam com as peças adjacentes
+        for i in range(len(board.grid)):
+            for j in range(len(board.grid[i])):
+                piece = board.get_value(i, j)
+                if piece == "FC":
+                    upper = board.adjacent_vertical_values(i, j)[0]
+                    if upper not in up:
+                        return False
+                    
+                elif piece == "FB":
+                    lower = board.adjacent_vertical_values(i, j)[1]
+                    if lower not in down:
+                        return False
+                
+                elif piece == "FD":
+                    rightPiece = board.adjacent_horizontal_values(i, j)[1]
+                    if rightPiece not in right:
+                        return False
+                
+                elif piece == "FE":
+                    leftPiece = board.adjacent_horizontal_values(i, j)[0]
+                    if leftPiece not in left:
+                        return False
+                
+                elif piece == "BC":
+                    upper = board.adjacent_vertical_values(i, j)[0]
+                    leftPiece = board.adjacent_horizontal_values(i, j)[0]
+                    rightPiece = board.adjacent_horizontal_values(i, j)[1]
+                    if upper not in up or leftPiece not in left or rightPiece not in right:
+                        return False
+                
+                elif piece == "BD":
+                    upper = board.adjacent_vertical_values(i, j)[0]
+                    lower = board.adjacent_vertical_values(i, j)[1]
+                    rightPiece = board.adjacent_horizontal_values(i, j)[1]
+                    if upper not in up or lower not in down or rightPiece not in right:
+                        return False
+                
+                elif piece == "BE":
+                    upper = board.adjacent_vertical_values(i, j)[0]
+                    lower = board.adjacent_vertical_values(i, j)[1]
+                    leftPiece = board.adjacent_horizontal_values(i, j)[0]
+                    if upper not in up or lower not in down or leftPiece not in left:
+                        return False
+                
+                elif piece == "BB":
+                    leftPiece = board.adjacent_horizontal_values(i, j)[0]
+                    rightPiece = board.adjacent_horizontal_values(i, j)[1]
+                    lower = board.adjacent_vertical_values(i, j)[1]
+                    if leftPiece not in left or rightPiece not in right or lower not in down:
+                        return False
+                    
+                elif piece == "VC":
+                    upper = board.adjacent_vertical_values(i, j)[0]
+                    leftPiece = board.adjacent_horizontal_values(i, j)[0]
+                    if upper not in up or leftPiece not in left:
+                        return False
+                    
+                elif piece == "VB":
+                    lower = board.adjacent_vertical_values(i, j)[1]
+                    rightPiece = board.adjacent_horizontal_values(i, j)[1]
+                    if lower not in down or rightPiece not in right:
+                        return False
+                    
+                elif piece == "VE":
+                    lower = board.adjacent_vertical_values(i, j)[1]
+                    leftPiece = board.adjacent_horizontal_values(i, j)[0]
+                    if lower not in down or leftPiece not in left:
+                        return False
+                
+                elif piece == "VD":
+                    upper = board.adjacent_vertical_values(i, j)[0]
+                    rightPiece = board.adjacent_horizontal_values(i, j)[1]
+                    if upper not in up or rightPiece not in right:
+                        return False
+                
+                elif piece == "LH":
+                    leftPiece = board.adjacent_horizontal_values(i, j)[0]
+                    rightPiece = board.adjacent_horizontal_values(i, j)[1]
+                    if leftPiece not in left or rightPiece not in right:
+                        return False
+                
+                elif piece == "LV":
+                    upper = board.adjacent_vertical_values(i, j)[0]
+                    lower = board.adjacent_vertical_values(i, j)[1]
+                    if upper not in up or lower not in down:
+                        return False
+                
+        # Se todas as peças encaixam, então o tabuleiro está resolvido
+        return True
+
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
@@ -135,8 +232,34 @@ class PipeMania(Problem):
 
 
 '''
-First thought on veryfing if the board is solved: If given any square, we can reach every other square in the board.
+Pieces that match:
+
+    Cima: "BB", "BE", "BD", "VB", "VE", "LV", "FB";
+    Baixo: "BC", "BE", "BD", "VC", "VD", "LV", "FC";
+    Esquerda: "BB", "BC", "BD", "VB", "VD", "LH", "FD";
+    Direita: "BB", "BC", "BE", "VC", "VE", "LH", "FE";
+
+    - "FC" Cima;
+    - "FB" Baixo;
+    - "FD" Direita;
+    - "FE" Esquerda;
+    - "BC" Cima, Esquerda, Direita;
+    - "BD" Cima, Baixo, Direita;
+    - "BE" Cima, Baixo, Esquerda;
+    - "BB" Esquerda, Direita, Baixo;
+    - "VC" Cima, Esquerda;
+    - "VB" Baixo, Direita;
+    - "VE" Esquerda, Baixo;
+    - "VD" Cima, Direita;
+    - "LH" Esquerda, Direita;
+    - "LV" Cima, Baixo;
+
 '''
+
+
+
+
+
 
 if __name__ == "__main__":
     # TODO:
@@ -147,11 +270,12 @@ if __name__ == "__main__":
 
 
 
-    # Teste da classe Board
+    # Teste da classe Board e goal test
     board = Board.parse_instance()
+    state = PipeManiaState(board)
+    problem = PipeMania(board)
 
-    print(board.adjacent_vertical_values(0, 0))
-    print(board.adjacent_horizontal_values(0, 0))
-    print(board.adjacent_vertical_values(1, 1))
-    print(board.adjacent_horizontal_values(1, 1))
+    print(problem.goal_test(state))
+
+
     pass
