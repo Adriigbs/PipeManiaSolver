@@ -2,9 +2,9 @@
 # Devem alterar as classes e funções neste ficheiro de acordo com as instruções do enunciado.
 # Além das funções e classes sugeridas, podem acrescentar outras que considerem pertinentes.
 
-# Grupo 00:
-# 00000 Nome1
-# 00000 Nome2
+# Grupo 02:
+# 99044 Adrian Graur
+# 99131 Vasco Roda Félix
 
 import sys
 from sys import stdin
@@ -188,8 +188,28 @@ class PipeMania(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        # TODO
-        pass
+        actions = self.actions(state)
+        board = state.board
+        row = action[0]
+        col = action[1]
+
+        if action not in actions:
+            return False
+        
+        if(action[2] == True):  #clockwise 
+            #TODO
+            pass
+
+        elif(action[2] == False):   #anticlockwise
+            #TODO
+            pass
+
+        else:
+            board[row][col] = action[2]
+
+        state.board = board
+
+        return state
 
     def goal_test(self, state: PipeManiaState):
         """Retorna True se e só se o estado passado como argumento é
