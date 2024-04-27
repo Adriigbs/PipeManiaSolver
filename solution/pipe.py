@@ -108,7 +108,79 @@ class PipeMania(Problem):
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        # TODO
+        board = state.board
+        actions = []
+
+        for i in range(len(board.grid)):
+            for j in range(len(board.grid[i])):
+                piece = board.get_value(i, j)
+
+                if i == 0 and j == 0:
+                    if piece.startswith("F"):
+                        actions.extend([(i, j, "FB"), (i, j, "FD")])
+                    elif piece.startswith("V"):
+                        actions.append((i, j, "VB"))
+            
+                elif i == 0 and j == len(board.grid[i]) - 1:
+                    if piece.startswith("F"):
+                        actions.extend([(i, j, "FB"), (i, j, "FE")])
+                    elif piece.startswith("V"):
+                        actions.append((i, j, "VE"))
+
+                elif i == len(board.grid) - 1 and j == 0:
+                    if piece.startswith("F"):
+                        actions.extend([(i, j, "FC"), (i, j, "FD")])
+                    elif piece.startswith("V"):
+                        actions.append((i, j, "VD"))
+            
+                elif i == len(board.grid) - 1 and j == len(board.grid[i]) - 1:
+                    if piece.startswith("F"):
+                        actions.extend([(i, j, "FC"), (i, j, "FE")])
+                    elif piece.startswith("V"):
+                        actions.append((i, j, "VC"))
+
+                elif i == 0 and j != 0 and j != len(board.grid[i]) - 1:
+                    if piece.startswith("B"):
+                        actions.append((i, j, "BB"))
+                    elif piece.startswith("L"):
+                        actions.append((i, j, "LH"))
+                    elif piece.startswith("V"):
+                        actions.extend([(i, j, "VB"), (i, j, "VE")])
+                    elif piece.startswith("F"):
+                        actions.extend([(i, j, "FB"), (i, j, "FD"), (i, j, "FE")])
+                
+                elif i == len(board.grid) - 1 and j != 0 and j != len(board.grid[i]) - 1:
+                    if piece.startswith("B"):
+                        actions.append((i, j, "BC"))
+                    elif piece.startswith("L"):
+                        actions.append((i, j, "LH"))
+                    elif piece.startswith("V"):
+                        actions.extend([(i, j, "VC"), (i, j, "VD")])
+                    elif piece.startswith("F"):
+                        actions.extend([(i, j, "FC"), (i, j, "FD"), (i, j, "FE")])
+
+                elif j == 0 and i != 0 and i != len(board.grid) - 1:
+                    if piece.startswith("B"):
+                        actions.append((i, j, "BD"))
+                    elif piece.startswith("L"):
+                        actions.append((i, j, "LV"))
+                    elif piece.startswith("V"):
+                        actions.extend([(i, j, "VB"), (i, j, "VD")])
+                    elif piece.startswith("F"):
+                        actions.extend([(i, j, "FC"), (i, j, "FB"), (i, j, "FD")])         
+
+                elif j == len(board.grid[i]) - 1 and i != 0 and i != len(board.grid) - 1:
+                    if piece.startswith("B"):
+                        actions.append((i, j, "BE"))
+                    elif piece.startswith("L"):
+                        actions.append((i, j, "LV"))
+                    elif piece.startswith("V"):
+                        actions.extend([(i, j, "VC"), (i, j, "VE")])
+                    elif piece.startswith("F"):
+                        actions.extend([(i, j, "FC"), (i, j, "FB"), (i, j, "FE")])           
+
+        #TODO Restantes casos, talvez uma maneira de guardar no estado se uma peça está na posição final ou não.
+
         pass
 
     def result(self, state: PipeManiaState, action):
