@@ -96,14 +96,22 @@ class Board:
 
         return board
 
-    # TODO: outros metodos da classe
+    def change_piece_orientation(self, row: int, col: int, orientation: str):
+        """Muda a orientação da peça na posição (row, col) para a
+        orientação passada como argumento."""
+        self.grid[row][col] = orientation
+
 
 
 class PipeMania(Problem):
+
+    
+
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
-        # TODO
-        pass
+        initial = PipeManiaState(board)
+        super().__init__(initial)
+        
 
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -195,6 +203,7 @@ class PipeMania(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
+
         board = state.board
 
         up = ["BB", "BE", "BD", "VB", "VE", "LV", "FB"]         # Peças que encaixam com peça com abertura virada pra cima
@@ -344,10 +353,7 @@ if __name__ == "__main__":
 
     # Teste da classe Board e goal test
     board = Board.parse_instance()
-    state = PipeManiaState(board)
     problem = PipeMania(board)
-
-    print(problem.goal_test(state))
 
 
     pass
