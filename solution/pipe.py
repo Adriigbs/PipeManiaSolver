@@ -101,6 +101,15 @@ class Board:
         orientação passada como argumento."""
         self.grid[row][col] = orientation
 
+    def print(self):
+        """Imprime o tabuleiro."""
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                print(self.grid[i][j], end=" ")
+            print()
+
+        print()
+
 
 
 class PipeMania(Problem):
@@ -185,39 +194,37 @@ class PipeMania(Problem):
                     elif piece.startswith("V"):
                         actions.extend([(i, j, "VC"), (i, j, "VE")])
                     elif piece.startswith("F"):
-                        actions.extend([(i, j, "FC"), (i, j, "FB"), (i, j, "FE")])           
+                        actions.extend([(i, j, "FC"), (i, j, "FB"), (i, j, "FE")])   
 
-        #TODO Restantes casos, talvez uma maneira de guardar no estado se uma peça está na posição final ou não.
+                else:
+                    if piece.startswith("B"):
+                        actions.extend([(i, j, "BB"), (i, j, "BC"), (i, j, "BD"), (i, j, "BE")])
+                    elif piece.startswith("L"):
+                        actions.extend([(i, j, "LH"), (i, j, "LV")])
+                    elif piece.startswith("V"):
+                        actions.extend([(i, j, "VB"), (i, j, "VC"), (i, j, "VD"), (i, j, "VE")])
+                    elif piece.startswith("F"):
+                        actions.extend([(i, j, "FB"), (i, j, "FC"), (i, j, "FD"), (i, j, "FE")])        
 
-        pass
+                # Remove a ação de colocar a peça na posição atual
+                actions.remove((i, j, piece))
+
+        return actions
+
 
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        actions = self.actions(state)
         board = state.board
         row = action[0]
         col = action[1]
 
-        if action not in actions:
-            return False
         
-        if(action[2] == True):  #clockwise 
-            #TODO
-            pass
+        board.change_piece_orientation(row, col, action[2])
 
-        elif(action[2] == False):   #anticlockwise
-            #TODO
-            pass
-
-        else:
-            board[row][col] = action[2]
-
-        state.board = board
-
-        return state
+        return PipeManiaState(board)
 
     def goal_test(self, state: PipeManiaState):
         """Retorna True se e só se o estado passado como argumento é
@@ -374,6 +381,12 @@ if __name__ == "__main__":
     # Teste da classe Board e goal test
     board = Board.parse_instance()
     problem = PipeMania(board)
+
+    goal_node = breadth_first_tree_search(problem)
+
+    print("Is goal?", problem.goal_test(goal_node.state), "\n")
+    print("Solution:\n")
+    goal_node.state.board.print()
 
 
     pass
