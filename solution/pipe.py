@@ -206,8 +206,9 @@ class PipeMania(Problem):
                     elif piece.startswith("F"):
                         actions.extend([(i, j, "FB"), (i, j, "FC"), (i, j, "FD"), (i, j, "FE")])        
 
-                # Remove a ação de colocar a peça na posição atual
-                actions.remove((i, j, piece))
+                # Remove a ação de colocar a peça na posição atual caso seja adicionada.
+                if piece in actions:
+                    actions.remove((i, j, piece))
 
         return actions
 
