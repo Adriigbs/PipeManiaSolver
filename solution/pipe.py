@@ -101,25 +101,35 @@ class Board:
         orientação passada como argumento."""
         self.grid[row][col] = orientation
 
-    def print(self):
-        """Imprime o tabuleiro."""
+    def copy(self):
+        """Devolve uma cópia do tabuleiro."""
+        copy = Board()
+        copy.grid = [row.copy() for row in self.grid]
+        return copy
+    
+    def compare(self, other):
+        """Compara o tabuleiro com outro tabuleiro passado como argumento."""
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
-                print(self.grid[i][j], end=" ")
-            print()
-
-        print()
+                if self.grid[i][j] != other.grid[i][j]:
+                    return False
+        return True
+    
+    def print(self):
+        """Imprime o tabuleiro."""
+        for row in self.grid:
+            print(" ".join(row))
+        print("\n")
 
 
 
 class PipeMania(Problem):
 
-    
-
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
         initial = PipeManiaState(board)
         super().__init__(initial)
+        self.visited = []
         
 
     def actions(self, state: PipeManiaState):
@@ -127,6 +137,11 @@ class PipeMania(Problem):
         partir do estado passado como argumento."""
         board = state.board
         actions = []
+
+        if self.isVisited(state):
+            return actions
+        
+        self.visited.append(state)
 
         for i in range(len(board.grid)):
             for j in range(len(board.grid[i])):
@@ -207,10 +222,21 @@ class PipeMania(Problem):
                         actions.extend([(i, j, "FB"), (i, j, "FC"), (i, j, "FD"), (i, j, "FE")])        
 
                 # Remove a ação de colocar a peça na posição atual caso seja adicionada.
-                if piece in actions:
+                if (i, j, piece) in actions:
                     actions.remove((i, j, piece))
 
+        
         return actions
+
+    def isVisited(self, state):
+        
+        board = state.board
+        for visited in self.visited:
+            if board.compare(visited.board):
+                return True
+        
+        return False
+
 
 
     def result(self, state: PipeManiaState, action):
@@ -218,12 +244,11 @@ class PipeMania(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        board = state.board
-        row = action[0]
-        col = action[1]
 
+        board = state.board.copy()
+        row, col, orientation = action
         
-        board.change_piece_orientation(row, col, action[2])
+        board.change_piece_orientation(row, col, orientation)
 
         return PipeManiaState(board)
 
@@ -383,11 +408,13 @@ if __name__ == "__main__":
     board = Board.parse_instance()
     problem = PipeMania(board)
 
-    goal_node = breadth_first_tree_search(problem)
+
+    
+    goal_node = depth_first_tree_search(problem)
 
     print("Is goal?", problem.goal_test(goal_node.state), "\n")
     print("Solution:\n")
     goal_node.state.board.print()
-
+    
 
     pass
