@@ -1,3 +1,4 @@
+
 # pipe.py: Template para implementação do projeto de Inteligência Artificial 2023/2024.
 # Devem alterar as classes e funções neste ficheiro de acordo com as instruções do enunciado.
 # Além das funções e classes sugeridas, podem acrescentar outras que considerem pertinentes.
@@ -32,20 +33,13 @@ class PipeManiaState:
 
     # TODO: outros metodos da classe
 
-class Piece:
-    
-    def __init__(self, piece_type, locked=False, connections=None):
-        self.type = piece_type  # String representing the type of the piece
-        self.locked = locked   # Boolean indicating if the piece is locked
-        self.connections = connections if connections is not None else []  # List of connections
-        
-    
-    
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
 
     grid = [] # Lista de listas de strings
+    locked = [] 
+    connections = []
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -59,16 +53,16 @@ class Board:
         
         
         if(len(self.grid) - 1 == row):          #last row case
-            result += (self.grid[row-1][col].type,)
+            result += (self.grid[row-1][col],)
             result += (None,)
 
         elif(row == 0):                         #first row case
             result += (None,)
-            result += (self.grid[row+1][col].type,)
+            result += (self.grid[row+1][col],)
 
         else:
-            result += (self.grid[row-1][col].type,)
-            result += (self.grid[row+1][col].type,)
+            result += (self.grid[row-1][col],)
+            result += (self.grid[row+1][col],)
 
         return result
 
@@ -79,17 +73,84 @@ class Board:
         
         if(col == 0):
             result += (None,)
-            result += (self.grid[row][col+1].type,)
+            result += (self.grid[row][col+1],)
         
         elif(len(self.grid[row]) - 1 == col):     
-            result += (self.grid[row][col-1].type,)
+            result += (self.grid[row][col-1],)
             result += (None,)
 
         else:
-            result += (self.grid[row][col-1].type,)
-            result += (self.grid[row][col+1].type,)
+            result += (self.grid[row][col-1],)
+            result += (self.grid[row][col+1],)
 
         return result
+
+
+    
+    def updateConncections(self, row: int, col: int):
+        """Atualiza o número de conexões da peça na posição (row, col) e das peças adjacentes."""
+        piece = self.grid[row][col]
+        
+        up, down, left, right = [], [], [], []
+        
+        leftPiece, rightPiece = self.adjacent_horizontal_values(row, col)
+        upper, lower = self.adjacent_vertical_values(row, col)
+        
+        if piece == "FC":
+            up.extend(["BB", "BE", "BD", "VB", "VE", "LV", "FB"])
+        elif piece == "FB":
+            down.extend(["BC", "BE", "BD", "VC", "VD", "LV", "FC"])
+        elif piece == "FD":
+            right.extend(["BB", "BC", "BD", "VB", "VD", "LH", "FD"])
+        elif piece == "FE":
+            left.extend(["BB", "BC", "BE", "VC", "VE", "LH", "FE"])
+        elif piece == "BC":
+            up.extend(["BB", "BE", "BD", "VB", "VE", "LV", "FB"])
+            left.extend(["BB", "BC", "BD", "VB", "VD", "LH", "FD"])
+            right.extend(["BB", "BC", "BE", "VC", "VE", "LH", "FE"])
+        elif piece == "BD":
+            up.extend(["BB", "BE", "BD", "VB", "VE", "LV", "FB"])
+            down.extend(["BC", "BE", "BD", "VC", "VD", "LV", "FC"])
+            right.extend(["BB", "BC", "BD", "VB", "VD", "LH", "FD"])
+        elif piece == "BE":
+            up.extend(["BB", "BE", "BD", "VB", "VE", "LV", "FB"])
+            down.extend(["BC", "BE", "BD", "VC", "VD", "LV", "FC"])
+            left.extend(["BB", "BC", "BE", "VC", "VE", "LH", "FE"])
+        elif piece == "BB":
+            left.extend(["BB", "BC", "BD", "VB", "VD", "LH", "FD"])
+            right.extend(["BB", "BC", "BE", "VC", "VE", "LH", "FE"])
+            down.extend(["BC", "BE", "BD", "VC", "VD", "LV", "FC"])
+        elif piece == "VC":
+            up.extend(["BB", "BE", "BD", "VB", "VE", "LV", "FB"])
+            left.extend(["BB", "BC", "BD", "VB", "VD", "LH", "FD"])
+        elif piece == "VB":
+            down.extend(["BC", "BE", "BD", "VC", "VD", "LV", "FC"])
+            right.extend(["BB", "BC", "BE", "VC", "VE", "LH", "FE"])
+        elif piece == "VE":
+            down.extend(["BC", "BE", "BD", "VC", "VD", "LV", "FC"])
+            left.extend(["BB", "BC", "BE", "VC", "VE", "LH", "FE"])
+        elif piece == "VD":
+            up.extend(["BB", "BE", "BD", "VB", "VE", "LV", "FB"])
+            right.extend(["BB", "BC", "BD", "VB", "VD", "LH", "FD"])
+        elif piece == "LH":
+            left.extend(["BB", "BC", "BD", "VB", "VD", "LH", "FD"])
+            right.extend(["BB", "BC", "BE", "VC", "VE", "LH", "FE"])
+        elif piece == "LV":
+            up.extend(["BB", "BE", "BD", "VB", "VE", "LV", "FB"])
+            down.extend(["BC", "BE", "BD", "VC", "VD", "LV", "FC"])
+            
+        if upper in up:
+            self.connections[row][col] += 1
+        
+        if lower in down:
+            self.connections[row][col] += 1
+        
+        if leftPiece in left:
+            self.connections[row][col] += 1
+        
+        if rightPiece in right:
+            self.connections[row][col] += 1 
+
 
     @staticmethod
     def parse_instance():
@@ -101,14 +162,26 @@ class Board:
         lines = stdin.readlines()
         for line in lines:
             line = line.strip()
-            board.grid.append([Piece(type) for type in line.split()])
+            
+            row = []
+            lock = []
+            conn = []
+            
+            for piece in line.split():
+                row.append(piece)
+                lock.append(False)
+                conn.append(0)
+            
+            board.grid.append(row)
+            board.locked.append(lock)
+            board.connections.append(conn)
 
         return board
 
-    def change_piece_type(self, row: int, col: int, type: str):
+    def change_piece_orientation(self, row: int, col: int, orientation: str):
         """Muda a orientação da peça na posição (row, col) para a
         orientação passada como argumento."""
-        self.grid[row][col].type = type
+        self.grid[row][col] = orientation
 
     def copy(self):
         """Devolve uma cópia do tabuleiro."""
@@ -120,14 +193,15 @@ class Board:
         """Compara o tabuleiro com outro tabuleiro passado como argumento."""
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
-                if self.grid[i][j].type != other.grid[i][j].type:   
+                if self.grid[i][j] != other.grid[i][j]:
                     return False
         return True
     
     def print(self):
         """Imprime o tabuleiro."""
         for row in self.grid:
-            print(" ".join([piece.type for piece in row]))
+            print(" ".join(row))
+        print("\n")
 
 
 
@@ -154,85 +228,84 @@ class PipeMania(Problem):
         for i in range(len(board.grid)):
             for j in range(len(board.grid[i])):
                 piece = board.get_value(i, j)
-                type = piece.type
 
                 if i == 0 and j == 0:
-                    if type.startswith("F"):
+                    if piece.startswith("F"):
                         actions.extend([(i, j, "FB"), (i, j, "FD")])
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.append((i, j, "VB"))
             
                 elif i == 0 and j == len(board.grid[i]) - 1:
-                    if type.startswith("F"):
+                    if piece.startswith("F"):
                         actions.extend([(i, j, "FB"), (i, j, "FE")])
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.append((i, j, "VE"))
 
                 elif i == len(board.grid) - 1 and j == 0:
-                    if type.startswith("F"):
+                    if piece.startswith("F"):
                         actions.extend([(i, j, "FC"), (i, j, "FD")])
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.append((i, j, "VD"))
             
                 elif i == len(board.grid) - 1 and j == len(board.grid[i]) - 1:
-                    if type.startswith("F"):
+                    if piece.startswith("F"):
                         actions.extend([(i, j, "FC"), (i, j, "FE")])
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.append((i, j, "VC"))
 
                 elif i == 0 and j != 0 and j != len(board.grid[i]) - 1:
-                    if type.startswith("B"):
+                    if piece.startswith("B"):
                         actions.append((i, j, "BB"))
-                    elif type.startswith("L"):
+                    elif piece.startswith("L"):
                         actions.append((i, j, "LH"))
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.extend([(i, j, "VB"), (i, j, "VE")])
-                    elif type.startswith("F"):
+                    elif piece.startswith("F"):
                         actions.extend([(i, j, "FB"), (i, j, "FD"), (i, j, "FE")])
                 
                 elif i == len(board.grid) - 1 and j != 0 and j != len(board.grid[i]) - 1:
-                    if type.startswith("B"):
+                    if piece.startswith("B"):
                         actions.append((i, j, "BC"))
-                    elif type.startswith("L"):
+                    elif piece.startswith("L"):
                         actions.append((i, j, "LH"))
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.extend([(i, j, "VC"), (i, j, "VD")])
-                    elif type.startswith("F"):
+                    elif piece.startswith("F"):
                         actions.extend([(i, j, "FC"), (i, j, "FD"), (i, j, "FE")])
 
                 elif j == 0 and i != 0 and i != len(board.grid) - 1:
-                    if type.startswith("B"):
+                    if piece.startswith("B"):
                         actions.append((i, j, "BD"))
-                    elif type.startswith("L"):
+                    elif piece.startswith("L"):
                         actions.append((i, j, "LV"))
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.extend([(i, j, "VB"), (i, j, "VD")])
-                    elif type.startswith("F"):
+                    elif piece.startswith("F"):
                         actions.extend([(i, j, "FC"), (i, j, "FB"), (i, j, "FD")])         
 
                 elif j == len(board.grid[i]) - 1 and i != 0 and i != len(board.grid) - 1:
-                    if type.startswith("B"):
+                    if piece.startswith("B"):
                         actions.append((i, j, "BE"))
-                    elif type.startswith("L"):
+                    elif piece.startswith("L"):
                         actions.append((i, j, "LV"))
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.extend([(i, j, "VC"), (i, j, "VE")])
-                    elif type.startswith("F"):
+                    elif piece.startswith("F"):
                         actions.extend([(i, j, "FC"), (i, j, "FB"), (i, j, "FE")])   
 
                 else:
-                    if type.startswith("B"):
+                    if piece.startswith("B"):
                         actions.extend([(i, j, "BB"), (i, j, "BC"), (i, j, "BD"), (i, j, "BE")])
-                    elif type.startswith("L"):
+                    elif piece.startswith("L"):
                         actions.extend([(i, j, "LH"), (i, j, "LV")])
-                    elif type.startswith("V"):
+                    elif piece.startswith("V"):
                         actions.extend([(i, j, "VB"), (i, j, "VC"), (i, j, "VD"), (i, j, "VE")])
-                    elif type.startswith("F"):
+                    elif piece.startswith("F"):
                         actions.extend([(i, j, "FB"), (i, j, "FC"), (i, j, "FD"), (i, j, "FE")])        
 
                 # Remove a ação de colocar a peça na posição atual caso seja adicionada.
-                if (i, j, type) in actions:
-                    actions.remove((i, j, type))
+                if (i, j, piece) in actions:
+                    actions.remove((i, j, piece))
 
         
         return actions
@@ -255,9 +328,9 @@ class PipeMania(Problem):
         self.actions(state)."""
 
         board = state.board.copy()
-        row, col, type = action
+        row, col, orientation = action
         
-        board.change_piece_type(row, col, type)
+        board.change_piece_orientation(row, col, orientation)
 
         return PipeManiaState(board)
 
@@ -275,12 +348,9 @@ class PipeMania(Problem):
 
 
         # Verificar se todas as peças encaixam com as peças adjacentes
-        print(board.grid)
         for i in range(len(board.grid)):
-            print(board.grid[i])
             for j in range(len(board.grid[i])):
                 piece = board.get_value(i, j)
-                type = piece.type
                 if piece == "FC":
                     upper = board.adjacent_vertical_values(i, j)[0]
                     if upper not in up:
@@ -418,7 +488,6 @@ if __name__ == "__main__":
 
     # Teste da classe Board e goal test
     board = Board.parse_instance()
-    board.print()
     problem = PipeMania(board)
 
 
