@@ -32,6 +32,11 @@ class PipeManiaState:
 
     # TODO: outros metodos da classe
 
+class Piece:
+    def __init__(self, piece_type, locked=False, connections=None):
+        self.type = piece_type  # String representing the type of the piece
+        self.locked = locked   # Boolean indicating if the piece is locked
+        self.connections = connections if connections is not None else []  # List of connections
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
@@ -40,7 +45,7 @@ class Board:
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
-        return self.grid[row][col]
+        return self.grid[row][col].type
         
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
@@ -50,16 +55,16 @@ class Board:
         
         
         if(len(self.grid) - 1 == row):          #last row case
-            result += (self.grid[row-1][col],)
+            result += (self.grid[row-1][col].type,)
             result += (None,)
 
         elif(row == 0):                         #first row case
             result += (None,)
-            result += (self.grid[row+1][col],)
+            result += (self.grid[row+1][col].type,)
 
         else:
-            result += (self.grid[row-1][col],)
-            result += (self.grid[row+1][col],)
+            result += (self.grid[row-1][col].type,)
+            result += (self.grid[row+1][col].type,)
 
         return result
 
@@ -70,15 +75,15 @@ class Board:
         
         if(col == 0):
             result += (None,)
-            result += (self.grid[row][col+1],)
+            result += (self.grid[row][col+1].type,)
         
         elif(len(self.grid[row]) - 1 == col):     
-            result += (self.grid[row][col-1],)
+            result += (self.grid[row][col-1].type,)
             result += (None,)
 
         else:
-            result += (self.grid[row][col-1],)
-            result += (self.grid[row][col+1],)
+            result += (self.grid[row][col-1].type,)
+            result += (self.grid[row][col+1].type,)
 
         return result
 
@@ -92,14 +97,15 @@ class Board:
         lines = stdin.readlines()
         for line in lines:
             line = line.strip()
-            board.grid.append(line.split())
+            for type in line.split():
+                board.grid.append(Piece(type))
 
         return board
 
     def change_piece_orientation(self, row: int, col: int, orientation: str):
         """Muda a orientação da peça na posição (row, col) para a
         orientação passada como argumento."""
-        self.grid[row][col] = orientation
+        self.grid[row][col].type = orientation
 
     def copy(self):
         """Devolve uma cópia do tabuleiro."""
@@ -111,14 +117,17 @@ class Board:
         """Compara o tabuleiro com outro tabuleiro passado como argumento."""
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
-                if self.grid[i][j] != other.grid[i][j]:
+                if self.grid[i][j].type != other.grid[i][j].type:   
                     return False
         return True
     
     def print(self):
         """Imprime o tabuleiro."""
+        #TODO atualizar para dar com piece copilot num instante ahhaha
         for row in self.grid:
-            print(" ".join(row))
+            print(row)
+            #for col in row:
+             #   print(col.type + " ")
         print("\n")
 
 
@@ -266,7 +275,9 @@ class PipeMania(Problem):
 
 
         # Verificar se todas as peças encaixam com as peças adjacentes
+        print(board.grid)
         for i in range(len(board.grid)):
+            print(board.grid[i])
             for j in range(len(board.grid[i])):
                 piece = board.get_value(i, j)
                 if piece == "FC":
@@ -406,15 +417,16 @@ if __name__ == "__main__":
 
     # Teste da classe Board e goal test
     board = Board.parse_instance()
-    problem = PipeMania(board)
+    board.print()
+    #problem = PipeMania(board)
 
 
     
-    goal_node = depth_first_tree_search(problem)
+    #goal_node = depth_first_tree_search(problem)
 
-    print("Is goal?", problem.goal_test(goal_node.state), "\n")
-    print("Solution:\n")
-    goal_node.state.board.print()
+    #print("Is goal?", problem.goal_test(goal_node.state), "\n")
+    #print("Solution:\n")
+    #goal_node.state.board.print()
     
 
     pass
