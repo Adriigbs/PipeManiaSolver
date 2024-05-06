@@ -154,11 +154,11 @@ class Board:
                     self.locked[row][col-1] = True
 
             elif self.grid[row][col] == "FE":
-                if self.grid[row][col-1] == "VD":
+                if self.grid[row][col-1] in ["LH", "VD"]:
                     self.locked[row][col-1] = True
             
             elif self.grid[row][col] == "FC":
-                if self.grid[row-1][col] == "VE":
+                if self.grid[row-1][col] in  ["VE", "LV"]:
                     self.locked[row-1][col] = True
         
         elif row == 0 and col != 0 and col != len(self.grid[row]) - 1:
@@ -290,6 +290,9 @@ class Board:
         """Atualiza o número de conexões da peça na posição (row, col) e das peças adjacentes."""
         piece = self.grid[row][col]
         
+        
+        connections = 0
+        
         up, down, left, right = [], [], [], []
         
         leftPiece, rightPiece = self.adjacent_horizontal_values(row, col)
@@ -339,16 +342,18 @@ class Board:
             down.extend(["BC", "BE", "BD", "VC", "VD", "LV", "FC"])
             
         if upper in up:
-            self.connections[row][col] += 1
+            connections += 1
         
         if lower in down:
-            self.connections[row][col] += 1
+            connections += 1
         
         if leftPiece in left:
-            self.connections[row][col] += 1
+            connections += 1
         
         if rightPiece in right:
-            self.connections[row][col] += 1 
+            connections += 1
+            
+        self.connections[row][col] = connections
 
 
     @staticmethod
@@ -387,6 +392,7 @@ class Board:
         """Muda a orientação da peça na posição (row, col) para a
         orientação passada como argumento."""
         self.grid[row][col] = orientation
+        self.updateConncections(row, col)
 
     
     def copy(self):
@@ -439,6 +445,8 @@ class PipeMania(Problem):
         self.visited.append(board.copy())
         print("Adding board to visited:\n")
         board.print()
+        
+        print("Locks:", board.locked, "\n")
 
         for i in range(len(board.grid)):
             for j in range(len(board.grid[i])):
@@ -623,7 +631,24 @@ class PipeMania(Problem):
 
                 else:
                     if piece.startswith("B"):
-                        actions.extend([(i, j, "BB"), (i, j, "BC"), (i, j, "BD"), (i, j, "BE")])
+                        ac = self.checkIfLockedBifurcacao(board, i, j)
+                        if ac is not None:
+                            actions.append(ac)
+                        else:
+                            left = board.adjacent_horizontal_values(i, j)[0]
+                            right = board.adjacent_horizontal_values(i, j)[1]
+                            up = board.adjacent_vertical_values(i, j)[0]
+                            down = board.adjacent_vertical_values(i, j)[1]
+                            
+                            if not (board.isLocked(i-1, j) and up in ["FC", "FE", "FD", "BC", "VC", "VD", "LH"]):
+                                actions.append((i, j, "BC"))
+                            if not (board.isLocked(i+1, j) and down in ["FB", "FE", "FD", "BB", "VB", "VE", "LH"]):
+                                actions.append((i, j, "BB"))
+                            if not (board.isLocked(i, j-1) and left in ["FC", "FB", "FE", "BE", "VE", "VC", "LV"]):
+                                actions.append((i, j, "BE"))
+                            if not (board.isLocked(i, j+1) and right in ["FC", "FB", "FD", "BD", "VB", "VD", "LV"]):
+                                actions.append((i, j, "BD"))
+                                
                     elif piece.startswith("L"):
                         actions.extend([(i, j, "LH"), (i, j, "LV")])
                     elif piece.startswith("V"):
@@ -659,19 +684,51 @@ class PipeMania(Problem):
             copy = state.board.copy()
             copy.change_piece_orientation(action[0], action[1], action[2])
             
-            
-            
             for b in self.visited:
                 if copy.compare(b):
                     actionsToRemove.append(action)
+                    break
                     
         
         for action in actionsToRemove:
             actions.remove(action)
     
-        random.shuffle(actions)
-        print("Actions:", actions, "\n")    
+        
+        random.shuffle(actions) 
+        print("Actions:", actions, "\n")   
         return actions
+
+
+
+    def checkIfLockedBifurcacao(self, board, row, col):
+        """Restringe as ações possíveis para peças do tipo "B" bifurcação."""
+        
+        up = ["BB", "BE", "BD", "VB", "VE", "LV", "FD"]   # Peças que encaixam com peça com abertura virada pra cima
+        left = ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] # Peças que encaixam com peça com abertura virada pra esquerda
+        right = ["BB", "BC", "BE", "VC", "VE", "LH" "FE"] # Peças que encaixam com peça com abertura virada pra direita
+        down = ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] # Peças que encaixam com peça com abertura virada pra baixo
+        
+        up_piece = board.adjacent_vertical_values(row, col)[0]
+        down_piece = board.adjacent_vertical_values(row, col)[1]
+        left_piece = board.adjacent_horizontal_values(row, col)[0]
+        right_piece = board.adjacent_horizontal_values(row, col)[1]
+        
+        if board.isLocked(row+1, col) and board.isLocked(row, col+1) and board.isLocked(row, col-1):
+            if down_piece in down and left_piece in left and right_piece in right:
+                return (row, col, "BB")
+        elif board.isLocked(row-1, col) and board.isLocked(row, col+1) and board.isLocked(row, col-1):
+            if up_piece in up and left_piece in left and right_piece in right:
+                return (row, col, "BC")
+        elif board.isLocked(row+1, col) and board.isLocked(row-1, col) and board.isLocked(row, col-1):
+            if down_piece in down and up_piece in up and left_piece in left:
+                return (row, col, "BE")
+        elif board.isLocked(row+1, col) and board.isLocked(row-1, col) and board.isLocked(row, col+1):
+            if down_piece in down and up_piece in up and right_piece in right:
+                return (row, col, "BD")
+        
+        return None
+            
+            
 
 
     def checkIfLockedFecho(self, board, row, col):
@@ -764,34 +821,64 @@ class PipeMania(Problem):
         row, col, orientation = action
         
         board.change_piece_orientation(row, col, orientation)
-        board.updateConncections(row, col)
-        
-        
+ 
         
         # Dá lock às peças dos cantos e arestas e às adjecentes
         if row == 0 and col == 0:
             if orientation == "VB":
                 board.locked[row][col] = True
                 board.updateLocks(row, col)
+            elif orientation == "FD":
+                if board.get_value(row+1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FB":
+                if board.get_value(row, col+1).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            
             
         
         elif row == 0 and col == len(board.grid[row]) - 1:
             if orientation == "VE":
                 board.locked[row][col] = True
                 board.updateLocks(row, col)
+            elif orientation == "FE":
+                if board.get_value(row+1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FB":
+                if board.get_value(row, col-1).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
                 
         
         elif row == len(board.grid) - 1 and col == 0:
             if orientation == "VD":
                 board.locked[row][col] = True
                 board.updateLocks(row, col)
+            elif orientation == "FC":
+                if board.get_value(row, col+1).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FD":
+                if board.get_value(row-1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
                 
         
         elif row == len(board.grid) - 1 and col == len(board.grid[row]) - 1:
             if orientation == "VC":
                 board.locked[row][col] = True
                 board.updateLocks(row, col)
-                
+            elif orientation == "FC":
+                if board.get_value(row, col-1).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FE":
+                if board.get_value(row-1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)                
                 
         elif row == 0 and col != 0 and col != len(board.grid[row]) - 1:
             if orientation == "LH":
@@ -800,6 +887,27 @@ class PipeMania(Problem):
             elif orientation == "BB":
                 board.locked[row][col] = True
                 board.updateLocks(row, col)
+            elif orientation == "VB":
+                if board.isLocked(row, col+1) and board.get_value(row, col+1) in ["FE", "LH", "BB", "VE"]:
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "VE":
+                if board.isLocked(row, col-1) and board.get_value(row, col-1) in ["FD", "LH", "BB", "VB"]:
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FD":
+                if board.get_value(row, col-1).startswith("F") and board.get_value(row+1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FE":
+                if board.get_value(row, col+1).startswith("F") and board.get_value(row+1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FB":
+                if board.get_value(row, col+1).startswith("F") and board.get_value(row, col-1).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            
         
         elif row == len(board.grid) - 1 and col != 0 and col != len(board.grid[row]) - 1:
             if orientation == "LH":
@@ -808,6 +916,28 @@ class PipeMania(Problem):
             elif orientation == "BC":
                 board.locked[row][col] = True
                 board.updateLocks(row, col)
+            elif orientation == "VC":
+                if board.isLocked(row, col-1) and board.get_value(row, col-1) in ["FD", "LH", "BC", "VD"]:
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "VD":
+                if board.isLocked(row, col+1) and board.get_value(row, col+1) in ["FE", "LH", "BC", "VC"]:
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FD":
+                if board.get_value(row, col-1).startswith("F") and board.get_value(row-1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FE":
+                if board.get_value(row, col+1).startswith("F") and board.get_value(row-1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FC":
+                if board.get_value(row, col+1).startswith("F") and board.get_value(row, col-1).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            
+            
                 
         elif col == 0 and row != 0 and row != len(board.grid) - 1:
             if orientation == "LV":
@@ -816,6 +946,26 @@ class PipeMania(Problem):
             elif orientation == "BD":
                 board.locked[row][col] = True
                 board.updateLocks(row, col)
+            elif orientation == "VB":
+                if board.isLocked(row+1, col) and board.get_value(row+1, col) in ["FC", "BD", "VD", "LV"]:
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "VD":
+                if board.isLocked(row-1, col) and board.get_value(row-1, col) in ["FB", "BD", "VB", "LV"]:
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FC":
+                if board.get_value(row+1, col).startswith("F") and board.get_value(row, col+1).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FB":
+                if board.get_value(row, col+1).startswith("F") and board.get_value(row-1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FD":
+                if board.get_value(row+1, col).startswith("F") and board.get_value(row-1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
         
         elif col == len(board.grid[row]) - 1 and row != 0 and row != len(board.grid) - 1:
             if orientation == "LV":
@@ -824,6 +974,26 @@ class PipeMania(Problem):
             elif orientation == "BE":
                 board.locked[row][col] = True
                 board.updateLocks(row, col)
+            elif orientation == "VC":
+                if board.isLocked(row-1, col) and board.get_value(row-1, col) in ["FB", "BE", "VE", "LV"]:
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "VE":
+                if board.isLocked(row+1, col) and board.get_value(row+1, col) in ["FC", "BE", "VC", "LV"]:
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FC":
+                if board.get_value(row+1, col).startswith("F") and board.get_value(row, col-1).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FE":
+                if board.get_value(row+1, col).startswith("F") and board.get_value(row-1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
+            elif orientation == "FB":
+                if board.get_value(row, col-1).startswith("F") and board.get_value(row-1, col).startswith("F"):
+                    board.locked[row][col] = True
+                    board.updateLocks(row, col)
         
         
         
