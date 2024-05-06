@@ -428,7 +428,43 @@ class PipeMania(Problem):
         initial = PipeManiaState(board)
         super().__init__(initial)
         self.visited = []
+    
+    def prioritize_obvious_locks(self, state: PipeManiaState, actions):
         
+        board = state.board
+        lock_actions = []
+        
+        for action in actions:
+            row, col, piece = action
+            
+            if (row == 0 and col == 0) or \
+            (row == 0 and col == len(board.grid[row]) - 1) or \
+            (row == len(board.grid) - 1 and col == 0) or \
+            (row == len(board.grid) - 1 and col == len(board.grid[row]) - 1):
+                if piece.startswith("V"):
+                    lock_actions.append(action)
+            
+            elif row == 0 and col != 0 and col != len(board.grid[col]) - 1:
+                if piece.startswith("B") or piece.startswith("L"):
+                    lock_actions.append(action)
+
+            elif row == len(board.grid) - 1 and col != 0 and col != len(board.grid[row]) - 1:
+                if piece.startswith("B") or piece.startswith("L"):
+                    lock_actions.append(action)
+
+            elif col == 0 and row != 0 and row != len(board.grid) - 1:
+                if piece.startswith("B") or piece.startswith("L"):
+                    lock_actions.append(action)
+
+            elif col == len(board.grid[row]) - 1 and row != 0 and row != len(board.grid) - 1:
+                if piece.startswith("B") or piece.startswith("L"):
+                    lock_actions.append(action)
+        print(lock_actions)
+        if not lock_actions:    #se nao houver locks obvios retorna as actions normalmente
+            return actions
+        
+        return lock_actions
+
 
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -456,7 +492,7 @@ class PipeMania(Problem):
                 
                 piece = board.get_value(i, j)
 
-                if i == 0 and j == 0:
+                if i == 0 and j == 0:   #canto superior esquerdo
                     if piece.startswith("F"):
                         right = board.adjacent_horizontal_values(i, j)[1]
                         down = board.adjacent_vertical_values(i, j)[1]
@@ -474,7 +510,7 @@ class PipeMania(Problem):
                     elif piece.startswith("V"):
                         actions.append((i, j, "VB"))
             
-                elif i == 0 and j == len(board.grid[i]) - 1:
+                elif i == 0 and j == len(board.grid[i]) - 1:    #canto superior direito
                     if piece.startswith("F"):
                         left = board.adjacent_horizontal_values(i, j)[0]
                         down = board.adjacent_vertical_values(i, j)[1]
@@ -492,7 +528,7 @@ class PipeMania(Problem):
                     elif piece.startswith("V"):
                         actions.append((i, j, "VE"))
 
-                elif i == len(board.grid) - 1 and j == 0:
+                elif i == len(board.grid) - 1 and j == 0:   #canto inferior esquerdo
                     if piece.startswith("F"):
                         right = board.adjacent_horizontal_values(i, j)[1]
                         up = board.adjacent_vertical_values(i, j)[0]
@@ -510,7 +546,7 @@ class PipeMania(Problem):
                     elif piece.startswith("V"):
                         actions.append((i, j, "VD"))
             
-                elif i == len(board.grid) - 1 and j == len(board.grid[i]) - 1:
+                elif i == len(board.grid) - 1 and j == len(board.grid[i]) - 1:  #canto inferior direito
                     if piece.startswith("F"):
                         left = board.adjacent_horizontal_values(i, j)[0]
                         up = board.adjacent_vertical_values(i, j)[0]
@@ -529,7 +565,7 @@ class PipeMania(Problem):
                     elif piece.startswith("V"):
                         actions.append((i, j, "VC"))
 
-                elif i == 0 and j != 0 and j != len(board.grid[i]) - 1:
+                elif i == 0 and j != 0 and j != len(board.grid[i]) - 1: #linha de cima exceto cantos
                     if piece.startswith("B"):
                         actions.append((i, j, "BB"))
                     elif piece.startswith("L"):
@@ -554,7 +590,7 @@ class PipeMania(Problem):
                         if not down.startswith("F"):
                             actions.append((i, j, "FB"))
                 
-                elif i == len(board.grid) - 1 and j != 0 and j != len(board.grid[i]) - 1:
+                elif i == len(board.grid) - 1 and j != 0 and j != len(board.grid[i]) - 1:   #linha de baixo exceto cantos
                     if piece.startswith("B"):
                         actions.append((i, j, "BC"))
                     elif piece.startswith("L"):
@@ -579,7 +615,7 @@ class PipeMania(Problem):
                         if not up.startswith("F"):
                             actions.append((i, j, "FC"))
 
-                elif j == 0 and i != 0 and i != len(board.grid) - 1:
+                elif j == 0 and i != 0 and i != len(board.grid) - 1:    #linha da esquerda exceto cantos
                     if piece.startswith("B"):
                         actions.append((i, j, "BD"))
                     elif piece.startswith("L"):
@@ -604,7 +640,7 @@ class PipeMania(Problem):
                         if not down.startswith("F"):
                             actions.append((i, j, "FB"))    
 
-                elif j == len(board.grid[i]) - 1 and i != 0 and i != len(board.grid) - 1:
+                elif j == len(board.grid[i]) - 1 and i != 0 and i != len(board.grid) - 1:   #linha da direita exceto cantos
                     if piece.startswith("B"):
                         actions.append((i, j, "BE"))
                     elif piece.startswith("L"):
@@ -692,9 +728,11 @@ class PipeMania(Problem):
         
         for action in actionsToRemove:
             actions.remove(action)
+
+        actions = self.prioritize_obvious_locks(state, actions)
     
-        
-        random.shuffle(actions) 
+        random.shuffle(actions)
+        #actions = actions[0:3]     reduz tempo do 4x4 mas aleatoriamente pcausa do random actions
         print("Actions:", actions, "\n")   
         return actions
 
