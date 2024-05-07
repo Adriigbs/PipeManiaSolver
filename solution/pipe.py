@@ -395,7 +395,7 @@ class Board:
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FE":
-                if board.get_value(row, col+1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                if self.get_value(row, col+1).startswith("F") and self.get_value(row-1, col).startswith("F"):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FC":
