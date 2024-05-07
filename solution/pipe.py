@@ -282,7 +282,315 @@ class Board:
                     self.locked[row][col-1] = True
                 elif self.grid[row][col-1] == "FD":
                     self.locked[row][col-1] = True
+    
+    
+    def checkIfLocked(self, row: int, col: int):
+        """Verifica se a peça na posição (row, col) pode ser bloqueada, bloqueia e atualiza as peças adjacentes."""
+        
+        
+        orientation = self.grid[row][col]
+        
+        if row == 0 and col == 0:
+            if orientation == "VB":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "FD":
+                if self.get_value(row+1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FB":
+                if self.get_value(row, col+1).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
             
+            
+        
+        elif row == 0 and col == len(self.grid[row]) - 1:
+            if orientation == "VE":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "FE":
+                if self.get_value(row+1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FB":
+                if self.get_value(row, col-1).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+                
+        
+        elif row == len(self.grid) - 1 and col == 0:
+            if orientation == "VD":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "FC":
+                if self.get_value(row, col+1).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FD":
+                if self.get_value(row-1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+                
+        
+        elif row == len(self.grid) - 1 and col == len(self.grid[row]) - 1:
+            if orientation == "VC":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "FC":
+                if self.get_value(row, col-1).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FE":
+                if self.get_value(row-1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)                
+                
+        elif row == 0 and col != 0 and col != len(self.grid[row]) - 1:
+            if orientation == "LH":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "BB":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "VB":
+                if self.isLocked(row, col+1) and self.get_value(row, col+1) in ["FE", "LH", "BB", "VE"]:
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "VE":
+                if self.isLocked(row, col-1) and self.get_value(row, col-1) in ["FD", "LH", "BB", "VB"]:
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FD":
+                if self.get_value(row, col-1).startswith("F") and self.get_value(row+1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FE":
+                if self.get_value(row, col+1).startswith("F") and self.get_value(row+1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FB":
+                if self.get_value(row, col+1).startswith("F") and self.get_value(row, col-1).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            
+        
+        elif row == len(self.grid) - 1 and col != 0 and col != len(self.grid[row]) - 1:
+            if orientation == "LH":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "BC":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "VC":
+                if self.isLocked(row, col-1) and self.get_value(row, col-1) in ["FD", "LH", "BC", "VD"]:
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "VD":
+                if self.isLocked(row, col+1) and self.get_value(row, col+1) in ["FE", "LH", "BC", "VC"]:
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FD":
+                if self.get_value(row, col-1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FE":
+                if board.get_value(row, col+1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FC":
+                if self.get_value(row, col+1).startswith("F") and self.get_value(row, col-1).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            
+            
+                
+        elif col == 0 and row != 0 and row != len(self.grid) - 1:
+            if orientation == "LV":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "BD":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "VB":
+                if self.isLocked(row+1, col) and self.get_value(row+1, col) in ["FC", "BD", "VD", "LV"]:
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "VD":
+                if self.isLocked(row-1, col) and self.get_value(row-1, col) in ["FB", "BD", "VB", "LV"]:
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FC":
+                if self.get_value(row+1, col).startswith("F") and self.get_value(row, col+1).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FB":
+                if self.get_value(row, col+1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FD":
+                if self.get_value(row+1, col).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+        
+        elif col == len(self.grid[row]) - 1 and row != 0 and row != len(self.grid) - 1:
+            if orientation == "LV":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "BE":
+                self.locked[row][col] = True
+                self.updateLocks(row, col)
+            elif orientation == "VC":
+                if self.isLocked(row-1, col) and self.get_value(row-1, col) in ["FB", "BE", "VE", "LV"]:
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "VE":
+                if self.isLocked(row+1, col) and self.get_value(row+1, col) in ["FC", "BE", "VC", "LV"]:
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FC":
+                if self.get_value(row+1, col).startswith("F") and self.get_value(row, col-1).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FE":
+                if self.get_value(row+1, col).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+            elif orientation == "FB":
+                if self.get_value(row, col-1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+        
+        
+        
+        # Dá lock às peças que não estão nos cantos nem nas arestas e às adjecentes
+        if orientation == "FB":
+            down = self.adjacent_vertical_values(row, col)[1]
+            if down in ["BC", "BE", "BD", "VC", "VD", "LV"]:
+                if self.isLocked(row+1, col):
+                    self.locked[row][col] = True
+                   
+        
+        elif orientation == "FC":
+            up = self.adjacent_vertical_values(row, col)[0]
+            if up in ["BB", "BE", "BD", "VB", "VE", "LV"]:
+                if self.isLocked(row-1, col):
+                    self.locked[row][col] = True
+                    
+        
+        elif orientation == "FD":
+            right = self.adjacent_horizontal_values(row, col)[1]
+            if right in ["BB", "BC", "BE", "VC", "VE", "LH"]:
+                if self.isLocked(row, col+1):
+                    self.locked[row][col] = True
+                    
+                    
+        elif orientation == "FE":
+            left = self.adjacent_horizontal_values(row, col)[0]
+            if left in ["BB", "BC", "BD", "VB", "VD", "LH"]:
+                if self.isLocked(row, col-1):
+                    self.locked[row][col] = True
+                    
+                    
+        elif orientation == "BC":
+            left = self.adjacent_horizontal_values(row, col)[0]
+            right = self.adjacent_horizontal_values(row, col)[1]
+            up = self.adjacent_vertical_values(row, col)[0]
+            down = self.adjacent_vertical_values(row, col)[1]
+            if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"]:
+                if self.isLocked(row, col-1) and self.isLocked(row, col+1) and self.isLocked(row-1, col):
+                    self.locked[row][col] = True
+            
+            if down in ["FB","FE", "FD","BB","VB","VE","LH"] and self.isLocked(row+1, col):
+                self.locked[row][col] = True
+        
+        elif orientation == "BD":
+            up = self.adjacent_vertical_values(row, col)[0]
+            down = self.adjacent_vertical_values(row, col)[1]
+            right = self.adjacent_horizontal_values(row, col)[1]
+            left = self.adjacent_horizontal_values(row,col)[0]
+            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
+                if self.isLocked(row-1, col) and self.isLocked(row+1, col) and self.isLocked(row, col+1):
+                    self.locked[row][col] = True
+
+            if left in ["FC","FB", "FE", "BE", "VC", "VE","LV"] and self.isLocked(row, col-1):
+                self.locked[row][col] = True
+        
+        elif orientation == "BE":
+            up = self.adjacent_vertical_values(row, col)[0]
+            down = self.adjacent_vertical_values(row, col)[1]
+            left = self.adjacent_horizontal_values(row, col)[0]
+            right = self.adjacent_horizontal_values(row, col)[1]
+            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
+                if self.isLocked(row-1, col) and self.isLocked(row+1, col) and self.isLocked(row, col-1):
+                    self.locked[row][col] = True
+
+            if right in ["FC","FB", "FD", "BD", "VB", "VD","LV"] and self.isLocked(row, col+1):
+                self.locked[row][col] = True
+        
+        elif orientation == "BB":
+            left = self.adjacent_horizontal_values(row, col)[0]
+            right = self.adjacent_horizontal_values(row, col)[1]
+            down = self.adjacent_vertical_values(row, col)[1]
+            up = self.adjacent_vertical_values(row, col)[0]
+            if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]:
+                if self.isLocked(row, col-1) and self.isLocked(row, col+1) and self.isLocked(row+1, col):
+                    self.locked[row][col] = True
+
+            if up in ["FC","FE", "FD", "BC", "VC", "VD","LH"] and self.isLocked(row-1, col):
+                self.locked[row][col] = True
+            
+        elif orientation == "VC":
+            up = self.adjacent_vertical_values(row, col)[0]
+            left = self.adjacent_horizontal_values(row, col)[0]
+            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
+                if self.isLocked(row-1, col) and self.isLocked(row, col-1):
+                    self.locked[row][col] = True   
+                      
+        
+        elif orientation == "VB":
+            down = self.adjacent_vertical_values(row, col)[1]
+            right = self.adjacent_horizontal_values(row, col)[1]
+            if down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
+                if self.isLocked(row+1, col) and self.isLocked(row, col+1):
+                    self.locked[row][col] = True
+                   
+                    
+        elif orientation == "VE":
+            down = self.adjacent_vertical_values(row, col)[1]
+            left = self.adjacent_horizontal_values(row, col)[0]
+            if down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
+                if self.isLocked(row+1, col) and self.isLocked(row, col-1):
+                    self.locked[row][col] = True
+                   
+                    
+        elif orientation == "VD":
+            up = self.adjacent_vertical_values(row, col)[0]
+            right = self.adjacent_horizontal_values(row, col)[1]
+            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
+                if self.isLocked(row-1, col) and self.isLocked(row, col+1):
+                    self.locked[row][col] = True
+                  
+        
+        elif orientation == "LH":
+            left = self.adjacent_horizontal_values(row, col)[0]
+            right = self.adjacent_horizontal_values(row, col)[1]
+            if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and self.isLocked(row, col-1):
+                self.locked[row][col] = True
+
+            
+            elif right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and self.isLocked(row, col+1):
+                self.locked[row][col] = True
+                
+                    
+        elif orientation == "LV":
+            up = self.adjacent_vertical_values(row, col)[0]
+            down = self.adjacent_vertical_values(row, col)[1]
+            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]:
+                if self.isLocked(row-1, col) and self.isLocked(row+1, col):
+                    self.locked[row][col] = True
+    
+    
 
     def updateConncections(self, row: int, col: int):
         """Atualiza o número de conexões da peça na posição (row, col) e das peças adjacentes."""
@@ -378,10 +686,14 @@ class Board:
             board.locked.append(lock)
             board.connections.append(conn)
             
-            
+        # Initialize locked and connections
         for i in range(len(board.grid)):
             for j in range(len(board.grid[i])):
                 board.updateConncections(i, j)
+                
+        for i in range(len(board.grid)):
+            for j in range(len(board.grid[i])):
+                board.checkIfLocked(i, j)
             
 
         return board
@@ -457,7 +769,7 @@ class PipeMania(Problem):
             elif col == len(board.grid[row]) - 1 and row != 0 and row != len(board.grid) - 1:
                 if piece.startswith("B") or piece.startswith("L"):
                     lock_actions.append(action)
-        print(lock_actions)
+
         if not lock_actions:    #se nao houver locks obvios retorna as actions normalmente
             return actions
         
@@ -867,309 +1179,9 @@ class PipeMania(Problem):
         row, col, orientation = action
         
         board.change_piece_orientation(row, col, orientation)
- 
-        
-        # Dá lock às peças dos cantos e arestas e às adjecentes
-        if row == 0 and col == 0:
-            if orientation == "VB":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "FD":
-                if board.get_value(row+1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FB":
-                if board.get_value(row, col+1).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            
-            
-        
-        elif row == 0 and col == len(board.grid[row]) - 1:
-            if orientation == "VE":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "FE":
-                if board.get_value(row+1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FB":
-                if board.get_value(row, col-1).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-                
-        
-        elif row == len(board.grid) - 1 and col == 0:
-            if orientation == "VD":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "FC":
-                if board.get_value(row, col+1).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FD":
-                if board.get_value(row-1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-                
-        
-        elif row == len(board.grid) - 1 and col == len(board.grid[row]) - 1:
-            if orientation == "VC":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "FC":
-                if board.get_value(row, col-1).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FE":
-                if board.get_value(row-1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)                
-                
-        elif row == 0 and col != 0 and col != len(board.grid[row]) - 1:
-            if orientation == "LH":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "BB":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "VB":
-                if board.isLocked(row, col+1) and board.get_value(row, col+1) in ["FE", "LH", "BB", "VE"]:
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "VE":
-                if board.isLocked(row, col-1) and board.get_value(row, col-1) in ["FD", "LH", "BB", "VB"]:
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FD":
-                if board.get_value(row, col-1).startswith("F") and board.get_value(row+1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FE":
-                if board.get_value(row, col+1).startswith("F") and board.get_value(row+1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FB":
-                if board.get_value(row, col+1).startswith("F") and board.get_value(row, col-1).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            
-        
-        elif row == len(board.grid) - 1 and col != 0 and col != len(board.grid[row]) - 1:
-            if orientation == "LH":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "BC":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "VC":
-                if board.isLocked(row, col-1) and board.get_value(row, col-1) in ["FD", "LH", "BC", "VD"]:
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "VD":
-                if board.isLocked(row, col+1) and board.get_value(row, col+1) in ["FE", "LH", "BC", "VC"]:
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FD":
-                if board.get_value(row, col-1).startswith("F") and board.get_value(row-1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FE":
-                if board.get_value(row, col+1).startswith("F") and board.get_value(row-1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FC":
-                if board.get_value(row, col+1).startswith("F") and board.get_value(row, col-1).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            
-            
-                
-        elif col == 0 and row != 0 and row != len(board.grid) - 1:
-            if orientation == "LV":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "BD":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "VB":
-                if board.isLocked(row+1, col) and board.get_value(row+1, col) in ["FC", "BD", "VD", "LV"]:
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "VD":
-                if board.isLocked(row-1, col) and board.get_value(row-1, col) in ["FB", "BD", "VB", "LV"]:
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FC":
-                if board.get_value(row+1, col).startswith("F") and board.get_value(row, col+1).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FB":
-                if board.get_value(row, col+1).startswith("F") and board.get_value(row-1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FD":
-                if board.get_value(row+1, col).startswith("F") and board.get_value(row-1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-        
-        elif col == len(board.grid[row]) - 1 and row != 0 and row != len(board.grid) - 1:
-            if orientation == "LV":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "BE":
-                board.locked[row][col] = True
-                board.updateLocks(row, col)
-            elif orientation == "VC":
-                if board.isLocked(row-1, col) and board.get_value(row-1, col) in ["FB", "BE", "VE", "LV"]:
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "VE":
-                if board.isLocked(row+1, col) and board.get_value(row+1, col) in ["FC", "BE", "VC", "LV"]:
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FC":
-                if board.get_value(row+1, col).startswith("F") and board.get_value(row, col-1).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FE":
-                if board.get_value(row+1, col).startswith("F") and board.get_value(row-1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-            elif orientation == "FB":
-                if board.get_value(row, col-1).startswith("F") and board.get_value(row-1, col).startswith("F"):
-                    board.locked[row][col] = True
-                    board.updateLocks(row, col)
-        
-        
-        
-        # Dá lock às peças que não estão nos cantos nem nas arestas e às adjecentes
-        if orientation == "FB":
-            down = board.adjacent_vertical_values(row, col)[1]
-            if down in ["BC", "BE", "BD", "VC", "VD", "LV"]:
-                if board.isLocked(row+1, col):
-                    board.locked[row][col] = True
-                   
-        
-        elif orientation == "FC":
-            up = board.adjacent_vertical_values(row, col)[0]
-            if up in ["BB", "BE", "BD", "VB", "VE", "LV"]:
-                if board.isLocked(row-1, col):
-                    board.locked[row][col] = True
-                    
-        
-        elif orientation == "FD":
-            right = board.adjacent_horizontal_values(row, col)[1]
-            if right in ["BB", "BC", "BE", "VC", "VE", "LH"]:
-                if board.isLocked(row, col+1):
-                    board.locked[row][col] = True
-                    
-                    
-        elif orientation == "FE":
-            left = board.adjacent_horizontal_values(row, col)[0]
-            if left in ["BB", "BC", "BD", "VB", "VD", "LH"]:
-                if board.isLocked(row, col-1):
-                    board.locked[row][col] = True
-                    
-                    
-        elif orientation == "BC":
-            left = board.adjacent_horizontal_values(row, col)[0]
-            right = board.adjacent_horizontal_values(row, col)[1]
-            up = board.adjacent_vertical_values(row, col)[0]
-            down = board.adjacent_vertical_values(row, col)[1]
-            if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"]:
-                if board.isLocked(row, col-1) and board.isLocked(row, col+1) and board.isLocked(row-1, col):
-                    board.locked[row][col] = True
-            
-            if down in ["FB","FE", "FD","BB","VB","VE","LH"] and board.isLocked(row+1, col):
-                board.locked[row][col] = True
-        
-        elif orientation == "BD":
-            up = board.adjacent_vertical_values(row, col)[0]
-            down = board.adjacent_vertical_values(row, col)[1]
-            right = board.adjacent_horizontal_values(row, col)[1]
-            left = board.adjacent_horizontal_values(row,col)[0]
-            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
-                if board.isLocked(row-1, col) and board.isLocked(row+1, col) and board.isLocked(row, col+1):
-                    board.locked[row][col] = True
 
-            if left in ["FC","FB", "FE", "BE", "VC", "VE","LV"] and board.isLocked(row, col-1):
-                board.locked[row][col] = True
-        
-        elif orientation == "BE":
-            up = board.adjacent_vertical_values(row, col)[0]
-            down = board.adjacent_vertical_values(row, col)[1]
-            left = board.adjacent_horizontal_values(row, col)[0]
-            right = board.adjacent_horizontal_values(row, col)[1]
-            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
-                if board.isLocked(row-1, col) and board.isLocked(row+1, col) and board.isLocked(row, col-1):
-                    board.locked[row][col] = True
-
-            if right in ["FC","FB", "FD", "BD", "VB", "VD","LV"] and board.isLocked(row, col+1):
-                board.locked[row][col] = True
-        
-        elif orientation == "BB":
-            left = board.adjacent_horizontal_values(row, col)[0]
-            right = board.adjacent_horizontal_values(row, col)[1]
-            down = board.adjacent_vertical_values(row, col)[1]
-            up = board.adjacent_vertical_values(row, col)[0]
-            if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]:
-                if board.isLocked(row, col-1) and board.isLocked(row, col+1) and board.isLocked(row+1, col):
-                    board.locked[row][col] = True
-
-            if up in ["FC","FE", "FD", "BC", "VC", "VD","LH"] and board.isLocked(row-1, col):
-                board.locked[row][col] = True
-            
-        elif orientation == "VC":
-            up = board.adjacent_vertical_values(row, col)[0]
-            left = board.adjacent_horizontal_values(row, col)[0]
-            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
-                if board.isLocked(row-1, col) and board.isLocked(row, col-1):
-                    board.locked[row][col] = True   
-                      
-        
-        elif orientation == "VB":
-            down = board.adjacent_vertical_values(row, col)[1]
-            right = board.adjacent_horizontal_values(row, col)[1]
-            if down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
-                if board.isLocked(row+1, col) and board.isLocked(row, col+1):
-                    board.locked[row][col] = True
-                   
-                    
-        elif orientation == "VE":
-            down = board.adjacent_vertical_values(row, col)[1]
-            left = board.adjacent_horizontal_values(row, col)[0]
-            if down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
-                if board.isLocked(row+1, col) and board.isLocked(row, col-1):
-                    board.locked[row][col] = True
-                   
-                    
-        elif orientation == "VD":
-            up = board.adjacent_vertical_values(row, col)[0]
-            right = board.adjacent_horizontal_values(row, col)[1]
-            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
-                if board.isLocked(row-1, col) and board.isLocked(row, col+1):
-                    board.locked[row][col] = True
-                  
-        
-        elif orientation == "LH":
-            left = board.adjacent_horizontal_values(row, col)[0]
-            right = board.adjacent_horizontal_values(row, col)[1]
-            if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and board.isLocked(row, col-1):
-                board.locked[row][col] = True
-
-            
-            elif right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and board.isLocked(row, col+1):
-                board.locked[row][col] = True
-                
-                    
-        elif orientation == "LV":
-            up = board.adjacent_vertical_values(row, col)[0]
-            down = board.adjacent_vertical_values(row, col)[1]
-            if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]:
-                if board.isLocked(row-1, col) and board.isLocked(row+1, col):
-                    board.locked[row][col] = True
-    
+        # Verifica se a peça alterada fica locked
+        board.checkIfLocked(row, col)
             
            
 
