@@ -47,6 +47,7 @@ class Board:
         return self.grid[row][col]
         
 
+
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """ Devolve os valores imediatamente acima e abaixo,
         respectivamente. """
@@ -214,7 +215,7 @@ class Board:
                 elif self.grid[row-1][col] == "FB":
                     self.locked[row-1][col] = True
                 if self.grid[row][col-1] in ["FD", "BC", "VD"]:
-                    self.locked[row][col+1] = True
+                    self.locked[row][col-1] = True
             elif self.grid[row][col] == "VD":
                 if self.grid[row][col+1] in ["FE", "BE", "VC"]:
                     self.locked[row][col+1] = True
@@ -295,11 +296,16 @@ class Board:
                 self.locked[row][col] = True
                 self.updateLocks(row, col)
             elif orientation == "FD":
-                if self.get_value(row+1, col).startswith("F"):
+                if self.get_value(row+1, col).startswith("F") or \
+                    (self.locked[row+1][col] and self.get_value(row+1, col) == "VB"):
+                        
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
+    
             elif orientation == "FB":
-                if self.get_value(row, col+1).startswith("F"):
+                if self.get_value(row, col+1).startswith("F") or \
+                    (self.locked[row][col+1] and self.get_value(row, col+1) == "VB"):
+                        
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             
@@ -310,11 +316,13 @@ class Board:
                 self.locked[row][col] = True
                 self.updateLocks(row, col)
             elif orientation == "FE":
-                if self.get_value(row+1, col).startswith("F"):
+                if self.get_value(row+1, col).startswith("F") or \
+                    (self.locked[row+1][col] and self.get_value(row+1, col) == "VE"):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FB":
-                if self.get_value(row, col-1).startswith("F"):
+                if self.get_value(row, col-1).startswith("F") or \
+                    (self.locked[row][col-1] and self.get_value(row, col-1) == "VE"):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -324,11 +332,13 @@ class Board:
                 self.locked[row][col] = True
                 self.updateLocks(row, col)
             elif orientation == "FC":
-                if self.get_value(row, col+1).startswith("F"):
+                if self.get_value(row, col+1).startswith("F") or \
+                    (self.locked[row][col+1] and self.get_value(row, col+1) == "VD"):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FD":
-                if self.get_value(row-1, col).startswith("F"):
+                if self.get_value(row-1, col).startswith("F") or \
+                    (self.locked[row-1][col] and self.get_value(row-1, col) == "VD"):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -338,11 +348,15 @@ class Board:
                 self.locked[row][col] = True
                 self.updateLocks(row, col)
             elif orientation == "FC":
-                if self.get_value(row, col-1).startswith("F"):
+                if self.get_value(row, col-1).startswith("F") or \
+                    (self.locked[row][col-1] and self.get_value(row, col-1) == "VC"):
+                        
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FE":
-                if self.get_value(row-1, col).startswith("F"):
+                if self.get_value(row-1, col).startswith("F") or \
+                    (self.locked[row-1][col] and self.get_value(row-1, col) == "VC"):
+                        
                     self.locked[row][col] = True
                     self.updateLocks(row, col)                
                 
@@ -354,11 +368,13 @@ class Board:
                 self.locked[row][col] = True
                 self.updateLocks(row, col)
             elif orientation == "VB":
-                if self.isLocked(row, col+1) and self.get_value(row, col+1) in ["FE", "LH", "BB", "VE"]:
+                if (self.isLocked(row, col+1) and self.get_value(row, col+1) in ["FE", "LH", "BB", "VE"]) or \
+                    (self.isLocked(row, col-1) and self.get_value(row, col-1) in ["FE", "FB", "VE"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "VE":
-                if self.isLocked(row, col-1) and self.get_value(row, col-1) in ["FD", "LH", "BB", "VB"]:
+                if (self.isLocked(row, col-1) and self.get_value(row, col-1) in ["FD", "LH", "BB", "VB"]) or \
+                    (self.isLocked(row, col+1) and self.get_value(row, col+1) in ["FB", "FD", "VB"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FD":
@@ -383,11 +399,13 @@ class Board:
                 self.locked[row][col] = True
                 self.updateLocks(row, col)
             elif orientation == "VC":
-                if self.isLocked(row, col-1) and self.get_value(row, col-1) in ["FD", "LH", "BC", "VD"]:
+                if (self.isLocked(row, col-1) and self.get_value(row, col-1) in ["FD", "LH", "BC", "VD"]) or \
+                    (self.isLocked(row, col+1) and self.get_value(row, col+1) in ["FD", "FC", "VD"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "VD":
-                if self.isLocked(row, col+1) and self.get_value(row, col+1) in ["FE", "LH", "BC", "VC"]:
+                if (self.isLocked(row, col+1) and self.get_value(row, col+1) in ["FE", "LH", "BC", "VC"]) or \
+                    (self.isLocked(row, col-1) and self.get_value(row, col-1) in ["FC", "FE", "VC"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FD":
@@ -413,11 +431,13 @@ class Board:
                 self.locked[row][col] = True
                 self.updateLocks(row, col)
             elif orientation == "VB":
-                if self.isLocked(row+1, col) and self.get_value(row+1, col) in ["FC", "BD", "VD", "LV"]:
+                if (self.isLocked(row+1, col) and self.get_value(row+1, col) in ["FC", "BD", "VD", "LV"]) or \
+                    (self.isLocked(row-1, col) and self.get_value(row-1, col) in ["FC", "FD", "VD"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "VD":
-                if self.isLocked(row-1, col) and self.get_value(row-1, col) in ["FB", "BD", "VB", "LV"]:
+                if (self.isLocked(row-1, col) and self.get_value(row-1, col) in ["FB", "BD", "VB", "LV"]) or \
+                    (self.isLocked(row+1, col) and self.get_value(row+1, col) in ["FB", "FD", "VB"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FC":
@@ -441,11 +461,13 @@ class Board:
                 self.locked[row][col] = True
                 self.updateLocks(row, col)
             elif orientation == "VC":
-                if self.isLocked(row-1, col) and self.get_value(row-1, col) in ["FB", "BE", "VE", "LV"]:
+                if (self.isLocked(row-1, col) and self.get_value(row-1, col) in ["FB", "BE", "VE", "LV"]) or \
+                    (self.isLocked(row+1, col) and self.get_value(row+1, col) in ["FB", "FE", "VE"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "VE":
-                if self.isLocked(row+1, col) and self.get_value(row+1, col) in ["FC", "BE", "VC", "LV"]:
+                if (self.isLocked(row+1, col) and self.get_value(row+1, col) in ["FC", "BE", "VC", "LV"]) or \
+                    (self.isLocked(row-1, col) and self.get_value(row-1, col) in ["FC", "FE", "VC"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FC":
@@ -739,40 +761,109 @@ class PipeMania(Problem):
         super().__init__(initial)
         self.visited = []
     
-    def prioritize_obvious_locks(self, state: PipeManiaState, actions):
+    def prioritize_obvious_locks(self, state: PipeManiaState):
         
         board = state.board
         lock_actions = []
+
         
-        for action in actions:
-            row, col, piece = action
-            
-            if (row == 0 and col == 0) or \
-            (row == 0 and col == len(board.grid[row]) - 1) or \
-            (row == len(board.grid) - 1 and col == 0) or \
-            (row == len(board.grid) - 1 and col == len(board.grid[row]) - 1):
-                if piece.startswith("V"):
-                    lock_actions.append(action)
-            
-            elif row == 0 and col != 0 and col != len(board.grid[col]) - 1:
-                if piece.startswith("B") or piece.startswith("L"):
-                    lock_actions.append(action)
-
-            elif row == len(board.grid) - 1 and col != 0 and col != len(board.grid[row]) - 1:
-                if piece.startswith("B") or piece.startswith("L"):
-                    lock_actions.append(action)
-
-            elif col == 0 and row != 0 and row != len(board.grid) - 1:
-                if piece.startswith("B") or piece.startswith("L"):
-                    lock_actions.append(action)
-
-            elif col == len(board.grid[row]) - 1 and row != 0 and row != len(board.grid) - 1:
-                if piece.startswith("B") or piece.startswith("L"):
-                    lock_actions.append(action)
-
-        if not lock_actions:    #se nao houver locks obvios retorna as actions normalmente
-            return actions
         
+        
+        for row in range(len(board.grid)):
+            for col in range(len(board.grid[row])):
+                
+                piece = board.get_value(row, col)
+                         
+                upPiece = board.adjacent_vertical_values(row, col)[0]
+                downPiece = board.adjacent_vertical_values(row, col)[1]
+                leftPiece = board.adjacent_horizontal_values(row, col)[0]
+                rightPiece = board.adjacent_horizontal_values(row, col)[1]
+            
+            
+                if piece.startswith("F"):
+                    ac = self.checkIfLockedFecho(board, row, col)
+                    if ac is not None:
+                        lock_actions.append(ac)
+            
+            
+            
+                if row == 0 and col == 0:       #canto superior esquerdo
+                    if piece.startswith("V"):
+                        lock_actions.append((row, col, "VB"))
+                        
+                        
+                elif row == 0 and col == len(board.grid[row]) - 1:    #canto superior direito
+                    if piece.startswith("V"):
+                        lock_actions.append((row, col, "VE"))
+                
+                elif row == len(board.grid) - 1 and col == 0:   #canto inferior esquerdo
+                    if piece.startswith("V"):
+                        lock_actions.append((row, col, "VD"))
+                    
+                elif row == len(board.grid) - 1 and col == len(board.grid[row]) - 1:  #canto inferior direito
+                    if piece.startswith("V"):
+                        lock_actions.append((row, col, "VC"))
+                
+                elif row == len(board.grid) - 1 and col == len(board.grid[row]) - 1:  #canto inferior direito
+                    if piece.startswith("V"):
+                        lock_actions.append((row, col, "VC"))
+            
+                elif row == 0 and col != 0 and col != len(board.grid[col]) - 1:
+                    if piece.startswith("B"):
+                        lock_actions.append((row, col, "BB"))
+                    
+                    elif piece.startswith("V"):
+                        if (leftPiece in ["FD", "LH", "BB", "VB"] and board.isLocked(row, col-1)) or \
+                            (rightPiece in ["FD", "FB", "VB"] and board.isLocked(row, col+1)):
+                            lock_actions.append((row, col, "VE"))
+                        
+                        elif (rightPiece in ["FE", "LH", "BB", "VE"] and board.isLocked(row, col+1)) or \
+                            (leftPiece in ["FE", "FB", "VE"] and board.isLocked(row, col-1)):
+                            lock_actions.append((row, col, "VB"))
+
+                elif row == len(board.grid) - 1 and col != 0 and col != len(board.grid[row]) - 1:
+                    if piece.startswith("B"):
+                        lock_actions.append(row, col, "BC")
+                    
+                    elif piece.startswith("V"):
+                        if (leftPiece in ["FD", "LH", "BC", "VD"] and board.isLocked(row, col-1)) or \
+                            (rightPiece in ["FC","FD", "VD"] and board.isLocked(row, col+1)):
+                            lock_actions.append((row, col, "VC"))
+                        
+                        elif (rightPiece in ["FE", "LH", "BC", "VC"] and board.isLocked(row, col+1)) or \
+                            (leftPiece in ["FE", "FC", "VC"] and board.isLocked(row, col-1)):
+                            lock_actions.append((row, col, "VD"))
+
+                elif col == 0 and row != 0 and row != len(board.grid) - 1:
+                    if piece.startswith("B"):
+                        lock_actions.append((row, col, "BD"))
+                    
+                    elif piece.startswith("V"):
+                        if (upPiece in ["FB", "LV", "BD", "VB"] and board.isLocked(row-1, col)) or \
+                            (downPiece in ["FB", "FD", "VB"] and board.isLocked(row+1, col)):
+                            lock_actions.append((row, col, "VD"))
+                        
+                        elif (downPiece in ["FC", "LV", "BD", "VD"] and board.isLocked(row+1, col)) or \
+                            (upPiece in ["FC", "FD", "VD"] and board.isLocked(row-1, col)):
+                            lock_actions.append((row, col, "VB"))
+
+                elif col == len(board.grid[row]) - 1 and row != 0 and row != len(board.grid) - 1:
+                    if piece.startswith("B"):
+                        lock_actions.append((row, col, "BE"))
+                
+                    elif piece.startswith("V"):
+                        if (upPiece in ["FB", "LV", "BE", "VE"] and board.isLocked(row-1, col)) or \
+                            (downPiece in ["FB", "FE", "VE"] and board.isLocked(row+1, col)):
+                            lock_actions.append((row, col, "VC"))
+                        
+                        elif (downPiece in ["FC", "LV", "BE", "VC"] and board.isLocked(row+1, col)) or \
+                            (upPiece in ["FC", "FE", "VC"] and board.isLocked(row-1, col)):
+                            lock_actions.append((row, col, "VE"))
+                            
+                if (row, col, piece) in lock_actions:
+                    lock_actions.remove((row, col, piece))
+                
+         
         return lock_actions
 
 
@@ -794,235 +885,238 @@ class PipeMania(Problem):
         
         print("Locks:", board.locked, "\n")
 
-        for i in range(len(board.grid)):
-            for j in range(len(board.grid[i])):
-                
-                if board.isLocked(i, j):
-                    continue
-                
-                piece = board.get_value(i, j)
+        actions = self.prioritize_obvious_locks(state)
 
-                if i == 0 and j == 0:   #canto superior esquerdo
-                    if piece.startswith("F"):
-                        right = board.adjacent_horizontal_values(i, j)[1]
-                        down = board.adjacent_vertical_values(i, j)[1]
+        if not actions:
+            for i in range(len(board.grid)):
+                for j in range(len(board.grid[i])):
+                
+                    if board.isLocked(i, j):
+                        continue
+                
+                    piece = board.get_value(i, j)
+
+                    if i == 0 and j == 0:   #canto superior esquerdo
+                        if piece.startswith("F"):
+                            right = board.adjacent_horizontal_values(i, j)[1]
+                            down = board.adjacent_vertical_values(i, j)[1]
                         
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
                         
-                        if not right.startswith("F"):
-                            actions.append((i, j, "FD"))
-                        if not down.startswith("F"):
-                            actions.append((i, j, "FB"))
-                    elif piece.startswith("V"):
-                        actions.append((i, j, "VB"))
+                            if not right.startswith("F"):
+                                actions.append((i, j, "FD"))
+                            if not down.startswith("F"):
+                                actions.append((i, j, "FB"))
+                        elif piece.startswith("V"):
+                            actions.append((i, j, "VB"))
             
-                elif i == 0 and j == len(board.grid[i]) - 1:    #canto superior direito
-                    if piece.startswith("F"):
-                        left = board.adjacent_horizontal_values(i, j)[0]
-                        down = board.adjacent_vertical_values(i, j)[1]
+                    elif i == 0 and j == len(board.grid[i]) - 1:    #canto superior direito
+                        if piece.startswith("F"):
+                            left = board.adjacent_horizontal_values(i, j)[0]
+                            down = board.adjacent_vertical_values(i, j)[1]
                         
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
                         
-                        if not left.startswith("F"):
-                            actions.append((i, j, "FE"))
-                        if not down.startswith("F"):
-                            actions.append((i, j, "FB"))
-                    elif piece.startswith("V"):
-                        actions.append((i, j, "VE"))
+                            if not left.startswith("F"):
+                                actions.append((i, j, "FE"))
+                            if not down.startswith("F"):
+                                actions.append((i, j, "FB"))
+                        elif piece.startswith("V"):
+                            actions.append((i, j, "VE"))
 
-                elif i == len(board.grid) - 1 and j == 0:   #canto inferior esquerdo
-                    if piece.startswith("F"):
-                        right = board.adjacent_horizontal_values(i, j)[1]
-                        up = board.adjacent_vertical_values(i, j)[0]
+                    elif i == len(board.grid) - 1 and j == 0:   #canto inferior esquerdo
+                        if piece.startswith("F"):
+                            right = board.adjacent_horizontal_values(i, j)[1]
+                            up = board.adjacent_vertical_values(i, j)[0]
                         
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
                         
-                        if not right.startswith("F"):
-                            actions.append((i, j, "FD"))
-                        if not up.startswith("F"):
-                            actions.append((i, j, "FC"))
-                    elif piece.startswith("V"):
-                        actions.append((i, j, "VD"))
+                            if not right.startswith("F"):
+                                actions.append((i, j, "FD"))
+                            if not up.startswith("F"):
+                                actions.append((i, j, "FC"))
+                        elif piece.startswith("V"):
+                            actions.append((i, j, "VD"))
             
-                elif i == len(board.grid) - 1 and j == len(board.grid[i]) - 1:  #canto inferior direito
-                    if piece.startswith("F"):
-                        left = board.adjacent_horizontal_values(i, j)[0]
-                        up = board.adjacent_vertical_values(i, j)[0]
+                    elif i == len(board.grid) - 1 and j == len(board.grid[i]) - 1:  #canto inferior direito
+                        if piece.startswith("F"):
+                            left = board.adjacent_horizontal_values(i, j)[0]
+                            up = board.adjacent_vertical_values(i, j)[0]
                         
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
                         
                         
-                        if not left.startswith("F"):
-                            actions.append((i, j, "FE"))
-                        if not up.startswith("F"):
-                            actions.append((i, j, "FC"))
-                    elif piece.startswith("V"):
-                        actions.append((i, j, "VC"))
+                            if not left.startswith("F"):
+                                actions.append((i, j, "FE"))
+                            if not up.startswith("F"):
+                                actions.append((i, j, "FC"))
+                        elif piece.startswith("V"):
+                            actions.append((i, j, "VC"))
 
-                elif i == 0 and j != 0 and j != len(board.grid[i]) - 1: #linha de cima exceto cantos
-                    if piece.startswith("B"):
-                        actions.append((i, j, "BB"))
-                    elif piece.startswith("L"):
-                        actions.append((i, j, "LH"))
-                    elif piece.startswith("V"):
-                        actions.extend([(i, j, "VB"), (i, j, "VE")])
-                    elif piece.startswith("F"):
-                        left = board.adjacent_horizontal_values(i, j)[0]
-                        right = board.adjacent_horizontal_values(i, j)[1]
-                        down = board.adjacent_vertical_values(i, j)[1]
+                    elif i == 0 and j != 0 and j != len(board.grid[i]) - 1: #linha de cima exceto cantos
+                        if piece.startswith("B"):
+                            actions.append((i, j, "BB"))
+                        elif piece.startswith("L"):
+                            actions.append((i, j, "LH"))
+                        elif piece.startswith("V"):
+                            actions.extend([(i, j, "VB"), (i, j, "VE")])
+                        elif piece.startswith("F"):
+                            left = board.adjacent_horizontal_values(i, j)[0]
+                            right = board.adjacent_horizontal_values(i, j)[1]
+                            down = board.adjacent_vertical_values(i, j)[1]
                         
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
                         
-                        if not left.startswith("F"):
-                            actions.append((i, j, "FE"))
-                        if not right.startswith("F"):
-                            actions.append((i, j, "FD"))
-                        if not down.startswith("F"):
-                            actions.append((i, j, "FB"))
+                            if not left.startswith("F"):
+                                actions.append((i, j, "FE"))
+                            if not right.startswith("F"):
+                                actions.append((i, j, "FD"))
+                            if not down.startswith("F"):
+                                actions.append((i, j, "FB"))
                 
-                elif i == len(board.grid) - 1 and j != 0 and j != len(board.grid[i]) - 1:   #linha de baixo exceto cantos
-                    if piece.startswith("B"):
-                        actions.append((i, j, "BC"))
-                    elif piece.startswith("L"):
-                        actions.append((i, j, "LH"))
-                    elif piece.startswith("V"):
-                        actions.extend([(i, j, "VC"), (i, j, "VD")])
-                    elif piece.startswith("F"):
-                        left = board.adjacent_horizontal_values(i, j)[0]
-                        right = board.adjacent_horizontal_values(i, j)[1]
-                        up = board.adjacent_vertical_values(i, j)[0]
-                        
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
-                        
-                        if not left.startswith("F"):
-                            actions.append((i, j, "FE"))
-                        if not right.startswith("F"):
-                            actions.append((i, j, "FD"))
-                        if not up.startswith("F"):
-                            actions.append((i, j, "FC"))
-
-                elif j == 0 and i != 0 and i != len(board.grid) - 1:    #linha da esquerda exceto cantos
-                    if piece.startswith("B"):
-                        actions.append((i, j, "BD"))
-                    elif piece.startswith("L"):
-                        actions.append((i, j, "LV"))
-                    elif piece.startswith("V"):
-                        actions.extend([(i, j, "VB"), (i, j, "VD")])
-                    elif piece.startswith("F"):
-                        up = board.adjacent_vertical_values(i, j)[0]
-                        right = board.adjacent_horizontal_values(i, j)[1]
-                        down = board.adjacent_vertical_values(i, j)[1]
-                        
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
-                        
-                        if not up.startswith("F"):
-                            actions.append((i, j, "FC"))
-                        if not right.startswith("F"):
-                            actions.append((i, j, "FD"))
-                        if not down.startswith("F"):
-                            actions.append((i, j, "FB"))    
-
-                elif j == len(board.grid[i]) - 1 and i != 0 and i != len(board.grid) - 1:   #linha da direita exceto cantos
-                    if piece.startswith("B"):
-                        actions.append((i, j, "BE"))
-                    elif piece.startswith("L"):
-                        actions.append((i, j, "LV"))
-                    elif piece.startswith("V"):
-                        actions.extend([(i, j, "VC"), (i, j, "VE")])
-                    elif piece.startswith("F"):
-                        up = board.adjacent_vertical_values(i, j)[0]
-                        left = board.adjacent_horizontal_values(i, j)[0]
-                        down = board.adjacent_vertical_values(i, j)[1]
-                        
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
-                        
-                        if not up.startswith("F"):
-                            actions.append((i, j, "FC"))
-                        if not left.startswith("F"):
-                            actions.append((i, j, "FE"))
-                        if not down.startswith("F"):
-                            actions.append((i, j, "FB"))
-
-                else:   #centro do board
-                    if piece.startswith("B"):
-                        ac = self.checkIfLockedBifurcacao(board, i, j)
-                        if ac is not None:
-                            actions.append(ac)
-                        else:
+                    elif i == len(board.grid) - 1 and j != 0 and j != len(board.grid[i]) - 1:   #linha de baixo exceto cantos
+                        if piece.startswith("B"):
+                            actions.append((i, j, "BC"))
+                        elif piece.startswith("L"):
+                            actions.append((i, j, "LH"))
+                        elif piece.startswith("V"):
+                            actions.extend([(i, j, "VC"), (i, j, "VD")])
+                        elif piece.startswith("F"):
                             left = board.adjacent_horizontal_values(i, j)[0]
                             right = board.adjacent_horizontal_values(i, j)[1]
                             up = board.adjacent_vertical_values(i, j)[0]
-                            down = board.adjacent_vertical_values(i, j)[1]
-                            
-                            if not (board.isLocked(i-1, j) and up in ["FC", "FE", "FD", "BC", "VC", "VD", "LH"]):
-                                actions.append((i, j, "BC"))
-                            if not (board.isLocked(i+1, j) and down in ["FB", "FE", "FD", "BB", "VB", "VE", "LH"]):
-                                actions.append((i, j, "BB"))
-                            if not (board.isLocked(i, j-1) and left in ["FC", "FB", "FE", "BE", "VE", "VC", "LV"]):
-                                actions.append((i, j, "BE"))
-                            if not (board.isLocked(i, j+1) and right in ["FC", "FB", "FD", "BD", "VB", "VD", "LV"]):
-                                actions.append((i, j, "BD"))
-                                
-                    elif piece.startswith("L"):
-                        actions.extend([(i, j, "LH"), (i, j, "LV")])
-                    elif piece.startswith("V"):
-                        actions.extend([(i, j, "VB"), (i, j, "VC"), (i, j, "VD"), (i, j, "VE")])
-                    elif piece.startswith("F"):
-                        up = board.adjacent_vertical_values(i, j)[0]
-                        left = board.adjacent_horizontal_values(i, j)[0]
-                        right = board.adjacent_horizontal_values(i, j)[1]
-                        down = board.adjacent_vertical_values(i, j)[1]
                         
-                        # Se uma peça adjecente está locked, só há uma ação possível
-                        action = self.checkIfLockedFecho(board, i, j)
-                        if action is not None and piece != action[2]:
-                            actions.append(action)
-                            continue
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
                         
-                        if not up.startswith("F"):
-                            actions.append((i, j, "FC"))
-                        if not left.startswith("F"):
-                            actions.append((i, j, "FE"))
-                        if not right.startswith("F"):
-                            actions.append((i, j, "FD"))
-                        if not down.startswith("F"):
-                            actions.append((i, j, "FB"))       
+                            if not left.startswith("F"):
+                                actions.append((i, j, "FE"))
+                            if not right.startswith("F"):
+                                actions.append((i, j, "FD"))
+                            if not up.startswith("F"):
+                                actions.append((i, j, "FC"))
 
-                # Remove a ação de colocar a peça na posição atual caso seja adicionada.
-                if (i, j, piece) in actions:
-                    actions.remove((i, j, piece))
+                    elif j == 0 and i != 0 and i != len(board.grid) - 1:    #linha da esquerda exceto cantos
+                        if piece.startswith("B"):
+                            actions.append((i, j, "BD"))
+                        elif piece.startswith("L"):
+                            actions.append((i, j, "LV"))
+                        elif piece.startswith("V"):
+                            actions.extend([(i, j, "VB"), (i, j, "VD")])
+                        elif piece.startswith("F"):
+                            up = board.adjacent_vertical_values(i, j)[0]
+                            right = board.adjacent_horizontal_values(i, j)[1]
+                            down = board.adjacent_vertical_values(i, j)[1]
+                        
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
+                        
+                            if not up.startswith("F"):
+                                actions.append((i, j, "FC"))
+                            if not right.startswith("F"):
+                                actions.append((i, j, "FD"))
+                            if not down.startswith("F"):
+                                actions.append((i, j, "FB"))    
+
+                    elif j == len(board.grid[i]) - 1 and i != 0 and i != len(board.grid) - 1:   #linha da direita exceto cantos
+                        if piece.startswith("B"):
+                            actions.append((i, j, "BE"))
+                        elif piece.startswith("L"):
+                            actions.append((i, j, "LV"))
+                        elif piece.startswith("V"):
+                            actions.extend([(i, j, "VC"), (i, j, "VE")])
+                        elif piece.startswith("F"):
+                            up = board.adjacent_vertical_values(i, j)[0]
+                            left = board.adjacent_horizontal_values(i, j)[0]
+                            down = board.adjacent_vertical_values(i, j)[1]
+                        
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
+                        
+                            if not up.startswith("F"):
+                                actions.append((i, j, "FC"))
+                            if not left.startswith("F"):
+                                actions.append((i, j, "FE"))
+                            if not down.startswith("F"):
+                                actions.append((i, j, "FB"))
+
+                    else:   #centro do board
+                        if piece.startswith("B"):
+                            ac = self.checkIfLockedBifurcacao(board, i, j)
+                            if ac is not None:
+                                actions.append(ac)
+                            else:
+                                left = board.adjacent_horizontal_values(i, j)[0]
+                                right = board.adjacent_horizontal_values(i, j)[1]
+                                up = board.adjacent_vertical_values(i, j)[0]
+                                down = board.adjacent_vertical_values(i, j)[1]
+                            
+                                if not (board.isLocked(i-1, j) and up in ["FC", "FE", "FD", "BC", "VC", "VD", "LH"]):
+                                    actions.append((i, j, "BC"))
+                                if not (board.isLocked(i+1, j) and down in ["FB", "FE", "FD", "BB", "VB", "VE", "LH"]):
+                                    actions.append((i, j, "BB"))
+                                if not (board.isLocked(i, j-1) and left in ["FC", "FB", "FE", "BE", "VE", "VC", "LV"]):
+                                    actions.append((i, j, "BE"))
+                                if not (board.isLocked(i, j+1) and right in ["FC", "FB", "FD", "BD", "VB", "VD", "LV"]):
+                                    actions.append((i, j, "BD"))
+                                
+                        elif piece.startswith("L"):
+                            actions.extend([(i, j, "LH"), (i, j, "LV")])
+                        elif piece.startswith("V"):
+                            actions.extend([(i, j, "VB"), (i, j, "VC"), (i, j, "VD"), (i, j, "VE")])
+                        elif piece.startswith("F"):
+                            up = board.adjacent_vertical_values(i, j)[0]
+                            left = board.adjacent_horizontal_values(i, j)[0]
+                            right = board.adjacent_horizontal_values(i, j)[1]
+                            down = board.adjacent_vertical_values(i, j)[1]
+                        
+                            # Se uma peça adjecente está locked, só há uma ação possível
+                            action = self.checkIfLockedFecho(board, i, j)
+                            if action is not None and piece != action[2]:
+                                actions.append(action)
+                                continue
+                        
+                            if not up.startswith("F"):
+                                actions.append((i, j, "FC"))
+                            if not left.startswith("F"):
+                                actions.append((i, j, "FE"))
+                            if not right.startswith("F"):
+                                actions.append((i, j, "FD"))
+                            if not down.startswith("F"):
+                                actions.append((i, j, "FB"))       
+
+                    # Remove a ação de colocar a peça na posição atual caso seja adicionada.
+                    if (i, j, piece) in actions:
+                        actions.remove((i, j, piece))
 
         actionsToRemove = []
         
@@ -1038,8 +1132,6 @@ class PipeMania(Problem):
         
         for action in actionsToRemove:
             actions.remove(action)
-
-        actions = self.prioritize_obvious_locks(state, actions)
     
         random.shuffle(actions)
         #actions = actions[0:3]     reduz tempo do 4x4 mas aleatoriamente pcausa do random actions
@@ -1101,60 +1193,201 @@ class PipeMania(Problem):
         
         
         if row == 0 and col == 0:
-           if board.isLocked(row+1, col) and board.get_value(row+1, col) in down:
-               return (row, col, "FB")
-           elif board.isLocked(row, col+1) and board.get_value(row, col+1) in right:
-               return (row, col, "FD")
+            
+            rightPiece = board.adjacent_horizontal_values(row, col)[1]
+            downPiece = board.adjacent_vertical_values(row, col)[1]
+            
+            if (board.isLocked(row+1, col) and downPiece in down) or \
+                (board.isLocked(row, col+1) and rightPiece == "VB") or \
+                rightPiece.startswith("F"):
+                    
+                return (row, col, "FB")
+            
+            elif (board.isLocked(row, col+1) and rightPiece in right) or \
+                (board.isLocked(row+1, col) and downPiece == "VB") or \
+                downPiece.startswith("F"):
+                    
+                return (row, col, "FD")
+
 
         elif row == 0 and col == len(board.grid[row]) - 1:
-            if board.isLocked(row+1, col) and board.get_value(row+1, col) in down:
+            
+            leftPiece = board.adjacent_horizontal_values(row, col)[0]
+            downPiece = board.adjacent_vertical_values(row, col)[1]
+            
+            if (board.isLocked(row+1, col) and downPiece in down) or \
+                (board.isLocked(row, col-1) and leftPiece == "VE") or \
+                leftPiece.startswith("F"):
+                    
                 return (row, col, "FB")
-            elif board.isLocked(row, col-1) and board.get_value(row, col-1) in left:
+            
+            elif (board.isLocked(row, col-1) and leftPiece in left) or \
+                (board.isLocked(row+1, col) and downPiece == "VE") or \
+                downPiece.startswith("F"):
                 return (row, col, "FE")
         
         elif row == len(board.grid) - 1 and col == 0:
-            if board.isLocked(row-1, col) and board.get_value(row-1, col) in up:
+            
+            upPiece = board.adjacent_vertical_values(row, col)[0]
+            rightPiece = board.adjacent_horizontal_values(row, col)[1]
+            
+            if (board.isLocked(row-1, col) and upPiece in up) or \
+                (board.isLocked(row, col+1) and rightPiece == "VD") or \
+                rightPiece.startswith("F"):
+                    
                 return (row, col, "FC")
-            elif board.isLocked(row, col+1) and board.get_value(row, col+1) in right:
+            
+            elif (board.isLocked(row, col+1) and rightPiece in right) or \
+                (board.isLocked(row-1, col) and upPiece == "VD") or \
+                upPiece.startswith("F"):
                 return (row, col, "FD")
         
         elif row == len(board.grid) - 1 and col == len(board.grid[row]) - 1:
-            if board.isLocked(row-1, col) and board.get_value(row-1, col) in up:
+            
+            upPiece = board.adjacent_vertical_values(row, col)[0]
+            leftPiece = board.adjacent_horizontal_values(row, col)[0]
+            
+            if (board.isLocked(row-1, col) and upPiece in up) or \
+                (board.isLocked(row, col-1) and leftPiece == "VC") or \
+                leftPiece.startswith("F"):
                 return (row, col, "FC")
-            elif board.isLocked(row, col-1) and board.get_value(row, col-1) in left:
+            elif (board.isLocked(row, col-1) and leftPiece in left) or \
+                (board.isLocked(row-1, col) and upPiece == "VC") or \
+                upPiece.startswith("F"):
                 return (row, col, "FE")
         
-        elif row == 0 and col != 0 and col != len(board.grid[row]) - 1:
-            if board.isLocked(row+1, col) and board.get_value(row+1, col) in down:
+        elif row == 0 and col != 0 and col != len(board.grid[row]) - 1: # Upper row
+            
+            rightPiece = board.adjacent_horizontal_values(row, col)[1]
+            leftPiece = board.adjacent_horizontal_values(row, col)[0]
+            downPiece = board.adjacent_vertical_values(row, col)[1]
+            
+            if (board.isLocked(row+1, col) and downPiece in down) or \
+                (((board.isLocked(row, col+1) and rightPiece == "VB") or rightPiece.startswith("F")) and \
+                ((board.isLocked(row, col-1) and leftPiece == "VE") or leftPiece.startswith("F"))):
+                    
                 return (row, col, "FB")
-            elif board.isLocked(row, col-1) and board.get_value(row, col-1) in left:
+            
+            elif (board.isLocked(row, col-1) and leftPiece in left) or \
+                (((board.isLocked(row, col+1) and rightPiece == "VB") or rightPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece in ["BB", "VB", "VE", "LH"] ) or downPiece.startswith("F"))):
+                    
                 return (row, col, "FE")
-            elif board.isLocked(row, col+1) and board.get_value(row, col+1) in right:
+            
+            elif (board.isLocked(row, col+1) and rightPiece in right) or \
+                (((board.isLocked(row, col-1) and leftPiece == "VE") or leftPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece in ["BB", "VB", "VE", "LH"] ) or downPiece.startswith("F"))):
+                    
                 return (row, col, "FD")
         
         elif row == len(board.grid) - 1 and col != 0 and col != len(board.grid[row]) - 1:
-            if board.isLocked(row-1, col) and board.get_value(row-1, col) in up:
+            
+            upPiece = board.adjacent_vertical_values(row, col)[0]
+            rightPiece = board.adjacent_horizontal_values(row, col)[1]
+            leftPiece = board.adjacent_horizontal_values(row, col)[0]
+            
+            if (board.isLocked(row-1, col) and upPiece in up) or \
+                (((board.isLocked(row, col+1) and rightPiece == "VD") or rightPiece.startswith("F")) and \
+                ((board.isLocked(row, col-1) and leftPiece == "VC") or leftPiece.startswith("F"))):
+                    
                 return (row, col, "FC")
-            elif board.isLocked(row, col-1) and board.get_value(row, col-1) in left:
+            
+            elif (board.isLocked(row, col-1) and leftPiece in left) or \
+                (((board.isLocked(row, col+1) and rightPiece == "VD") or rightPiece.startswith("F")) and \
+                ((board.isLocked(row-1, col) and upPiece in ["BC", "VC", "VD", "LH"] ) or upPiece.startswith("F"))):
+                    
                 return (row, col, "FE")
-            elif board.isLocked(row, col+1) and board.get_value(row, col+1) in right:
+            
+            elif (board.isLocked(row, col+1) and rightPiece in right) or \
+                (((board.isLocked(row, col-1) and leftPiece == "VC") or leftPiece.startswith("F")) and \
+                ((board.isLocked(row-1, col) and upPiece in ["BC", "VC", "VD", "LH"] ) or upPiece.startswith("F"))):
+                    
                 return (row, col, "FD")
         
         elif col == 0 and row != 0 and row != len(board.grid) - 1:
-            if board.isLocked(row-1, col) and board.get_value(row-1, col) in up:
+            
+            upPiece = board.adjacent_vertical_values(row, col)[0]
+            downPiece = board.adjacent_vertical_values(row, col)[1]
+            rightPiece = board.adjacent_horizontal_values(row, col)[1]
+            
+            
+            if (board.isLocked(row-1, col) and upPiece in up) or \
+                (((board.isLocked(row, col+1) and rightPiece ["BD", "LV", "VB", "VD"]) or rightPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece == "VB" ) or downPiece.startswith("F"))):
+                    
                 return (row, col, "FC")
-            elif board.isLocked(row+1, col) and board.get_value(row+1, col) in down:
+            
+            elif (board.isLocked(row+1, col) and downPiece in down) or \
+                (((board.isLocked(row, col+1) and rightPiece ["BD", "LV", "VB", "VD"]) or rightPiece.startswith("F")) and \
+                ((board.isLocked(row-1, col) and upPiece == "VD" ) or upPiece.startswith("F"))):
+                    
                 return (row, col, "FB")
-            elif board.isLocked(row, col+1) and board.get_value(row, col+1) in right:
+            
+            elif (board.isLocked(row, col+1) and rightPiece in right) or \
+                (((board.isLocked(row-1, col) and upPiece == "VD") or upPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece == "VB" ) or downPiece.startswith("F"))):
+                
                 return (row, col, "FD")
             
         elif col == len(board.grid[row]) - 1 and row != 0 and row != len(board.grid) - 1:
-            if board.isLocked(row-1, col) and board.get_value(row-1, col) in up:
+            
+            upPiece = board.adjacent_vertical_values(row, col)[0]
+            downPiece = board.adjacent_vertical_values(row, col)[1]
+            leftPiece = board.adjacent_horizontal_values(row, col)[0]
+            
+            if (board.isLocked(row-1, col) and upPiece in up) or \
+                (((board.isLocked(row, col-1) and leftPiece in ["BE", "LV", "VC", "VE"]) or leftPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece == "VE" ) or downPiece.startswith("F"))):
+                
                 return (row, col, "FC")
-            elif board.isLocked(row+1, col) and board.get_value(row+1, col) in down:
+            
+            elif (board.isLocked(row+1, col) and downPiece in down) or \
+                (((board.isLocked(row, col-1) and leftPiece in ["BE", "LV", "VC", "VE"]) or leftPiece.startswith("F")) and \
+                ((board.isLocked(row-1, col) and upPiece == "VC" ) or upPiece.startswith("F"))):
+                    
                 return (row, col, "FB")
-            elif board.isLocked(row, col-1) and board.get_value(row, col-1) in left:
+            
+            elif (board.isLocked(row, col-1) and leftPiece in left) or \
+                (((board.isLocked(row-1, col) and upPiece == "VC") or upPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece == "VE" ) or downPiece.startswith("F"))): 
+                    
                 return (row, col, "FE")
+        
+        else:
+            
+            upPiece = board.adjacent_vertical_values(row, col)[0]
+            downPiece = board.adjacent_vertical_values(row, col)[1]
+            leftPiece = board.adjacent_horizontal_values(row, col)[0]
+            rightPiece = board.adjacent_horizontal_values(row, col)[1]
+            
+            
+            if (board.isLocked(row-1, col) and upPiece in up) or \
+                (((board.isLocked(row, col-1) and leftPiece in ["BE", "LV", "VC", "VE"]) or leftPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece in ["BB", "VB", "VE", "LH"] ) or downPiece.startswith("F")) and \
+                ((board.isLocked(row, col+1) and rightPiece in ["BD", "LV", "VB", "VD"]) or rightPiece.startswith("F"))):
+                    
+                return (row, col, "FC")
+            
+            elif (board.isLocked(row+1, col) and downPiece in down) or \
+                (((board.isLocked(row, col-1) and leftPiece in ["BE", "LV", "VC", "VE"]) or leftPiece.startswith("F")) and \
+                ((board.isLocked(row-1, col) and upPiece in ["BC", "VC", "VD", "LH"] ) or upPiece.startswith("F")) and \
+                ((board.isLocked(row, col+1) and rightPiece in ["BD", "LV", "VB", "VD"]) or rightPiece.startswith("F"))):
+                    
+                return (row, col, "FB")
+            
+            elif (board.isLocked(row, col-1) and leftPiece in left) or \
+                (((board.isLocked(row-1, col) and upPiece in ["BC", "VC", "VD", "LH"]) or upPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece in ["BB", "VB", "VE", "LH"] ) or downPiece.startswith("F")) and \
+                ((board.isLocked(row, col+1) and rightPiece in ["BD", "LV", "VB", "VD"]) or rightPiece.startswith("F"))):
+                    
+                return (row, col, "FE")
+            
+            elif (board.isLocked(row, col+1) and rightPiece in right) or \
+                (((board.isLocked(row-1, col) and upPiece in ["BC", "VC", "VD", "LH"]) or upPiece.startswith("F")) and \
+                ((board.isLocked(row+1, col) and downPiece in ["BB", "VB", "VE", "LH"] ) or downPiece.startswith("F")) and \
+                ((board.isLocked(row, col-1) and leftPiece in ["BE", "LV", "VC", "VE"]) or leftPiece.startswith("F"))):
+                
+                return (row, col, "FD")
         
         return None
 
