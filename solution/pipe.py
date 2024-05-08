@@ -722,8 +722,7 @@ class Board:
                 if down in ["BC", "BE", "BD", "VC", "VD", "LV"]:
                     if self.isLocked(row+1, col):
                         self.locked[row][col] = True
-                
-                else:
+            
                     
                    
         
