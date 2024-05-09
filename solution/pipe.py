@@ -102,6 +102,10 @@ class Board:
     def updateLocks(self, row: int, col: int):
         """Atualiza o estado de bloqueio das peças adjacentes apoós o bloqueio da peça na posição (row, col)."""
         
+        
+        
+        
+        
         if row == 0 and col == 0:
             if self.grid[row][col] == "VB":
                 if self.grid[row+1][col] in ["FC", "VD"]:
@@ -446,6 +450,20 @@ class Board:
                 if self.grid[row+1][col] == "FC" or \
                     (self.grid[row+1][col] == "LV" and row+1 != len(self.grid) - 1):
                     self.locked[row+1][col] = True
+            
+            elif self.grid[row][col] == "LH":
+                if self.grid[row][col-1] in ["FD", "LH"]:
+                    self.locked[row][col-1] = True
+                
+                if self.grid[row][col+1] in ["FE", "LH"]:
+                    self.locked[row][col+1] = True
+            
+            elif self.grid[row][col] == "LV":
+                if self.grid[row+1][col] in ["FC", "LV"]:
+                    self.locked[row+1][col] = True
+
+                if self.grid[row-1][col] in ["FB", "LV"]:
+                    self.locked[row-1][col] = True
     
     
     
@@ -456,6 +474,18 @@ class Board:
         
         
         orientation = self.grid[row][col]
+        downPiece = self.adjacent_vertical_values(row, col)[1]
+        leftPiece = self.adjacent_horizontal_values(row, col)[0]
+        rightPiece = self.adjacent_horizontal_values(row, col)[1]
+        upPiece = self.adjacent_vertical_values(row, col)[0]
+        
+        
+        up = ["BB", "BE", "BD", "VB", "VE", "LV", "FB"]     # Peças que encaixam com peça com abertura virada pra cima
+        left = ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]   # Peças que encaixam com peça com abertura virada pra esquerda
+        right = ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]  # Peças que encaixam com peça com abertura virada pra direita
+        down = ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]   # Peças que encaixam com peça com abertura virada pra baixo
+        
+        
         
         if row == 0 and col == 0:
             if orientation == "VB":
@@ -545,7 +575,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FD":
-                if self.get_value(row, col-1).startswith("F") and self.get_value(row+1, col).startswith("F"):
+                if (self.get_value(row+1, col).startswith("F") or (self.get_value(row+1, col) in ["LH", "BB", "VE", "VB"] and self.isLocked(row+1, col))) and \
+                    (self.get_value(row, col-1).startswith("F") or (self.get_value(row, col-1) == "VE" and self.isLocked(row, col-1))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -554,7 +585,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FE":
-                if self.get_value(row, col+1).startswith("F") and self.get_value(row+1, col).startswith("F"):
+                if (self.get_value(row+1, col).startswith("F") or (self.get_value(row+1, col) in ["LH", "BB", "VE", "VB"] and self.isLocked(row+1, col))) and \
+                    (self.get_value(row, col+1).startswith("F") or (self.get_value(row, col+1) == "VB" and self.isLocked(row, col+1))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -563,7 +595,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FB":
-                if self.get_value(row, col+1).startswith("F") and self.get_value(row, col-1).startswith("F"):
+                if (self.get_value(row, col+1).startswith("F") or (self.get_value(row, col+1) == "VB" and self.isLocked(row, col+1))) and \
+                    (self.get_value(row, col-1).startswith("F") or (self.get_value(row, col-1) == "VE" and self.isLocked(row, col-1))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -590,7 +623,8 @@ class Board:
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             elif orientation == "FD":
-                if self.get_value(row, col-1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                if (self.get_value(row-1, col).startswith("F") or (self.get_value(row-1, col) in ["LH", "BC", "VC", "VD"] and self.isLocked(row-1, col))) and \
+                    (self.get_value(row, col-1).startswith("F") or (self.get_value(row, col-1) == "VC" and self.isLocked(row, col-1))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -599,7 +633,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FE":
-                if self.get_value(row, col+1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                if (self.get_value(row, col+1).startswith("F") or (self.get_value(row, col+1) == "VD" and self.isLocked(row, col+1))) and \
+                    (self.get_value(row-1, col).startswith("F") or (self.get_value(row-1, col) in ["LH", "BC", "VC", "VD"] and self.isLocked(row-1, col))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                     
@@ -608,7 +643,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FC":
-                if self.get_value(row, col+1).startswith("F") and self.get_value(row, col-1).startswith("F"):
+                if (self.get_value(row, col+1).startswith("F") or (self.get_value(row, col+1) == "VD" and self.isLocked(row, col+1))) and \
+                    (self.get_value(row, col-1).startswith("F") or (self.get_value(row, col-1) == "VC" and self.isLocked(row, col-1))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -640,7 +676,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FC":
-                if self.get_value(row+1, col).startswith("F") and self.get_value(row, col+1).startswith("F"):
+                if (self.get_value(row+1, col).startswith("F") or (self.get_value(row+1, col) == "VB" and self.isLocked(row+1, col))) and \
+                    (self.get_value(row, col+1).startswith("F") or (self.get_value(row, col+1) in ["FD", "LV", "BD", "VB", "VD"] and self.isLocked(row, col+1))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -649,7 +686,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FB":
-                if self.get_value(row, col+1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                if (self.get_value(row-1, col).startswith("F") or (self.get_value(row-1, col) == "VD" and self.isLocked(row-1, col))) and \
+                    (self.get_value(row, col+1).startswith("F") or (self.get_value(row, col+1) in ["FD", "LV", "BD", "VB", "VD"] and self.isLocked(row, col+1))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -658,7 +696,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FD":
-                if self.get_value(row+1, col).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                if (self.get_value(row-1, col).startswith("F") or (self.get_value(row-1, col) == "VD" and self.isLocked(row-1, col))) and \
+                    (self.get_value(row+1, col).startswith("F") or (self.get_value(row+1, col) == "VB" and self.isLocked(row+1, col))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -688,7 +727,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FC":
-                if self.get_value(row+1, col).startswith("F") and self.get_value(row, col-1).startswith("F"):
+                if (self.get_value(row, col-1).startswith("F") or (self.get_value(row, col-1) in ["LV", "BE", "VE", "VC"] and self.isLocked(row, col-1))) and \
+                    (self.get_value(row+1, col).startswith("F") or (self.get_value(row+1, col) == "VE" and self.isLocked(row+1, col))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
@@ -697,7 +737,8 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FE":
-                if self.get_value(row+1, col).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                if (self.get_value(row+1, col).startswith("F") or (self.get_value(row+1, col) == "VE" and self.isLocked(row+1, col))) and \
+                    (self.get_value(row-1, col).startswith("F") or (self.get_value(row-1, col) == "VC" and self.isLocked(row-1, col))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                     
@@ -706,160 +747,198 @@ class Board:
                     self.updateLocks(row, col)
                     
             elif orientation == "FB":
-                if self.get_value(row, col-1).startswith("F") and self.get_value(row-1, col).startswith("F"):
+                if (self.get_value(row, col-1).startswith("F") or (self.get_value(row, col-1) in ["LV", "BE", "VE", "VC"] and self.isLocked(row, col-1))) and \
+                    (self.get_value(row-1, col).startswith("F") or (self.get_value(row-1, col) == "VC" and self.isLocked(row-1, col))):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
                 elif self.get_value(row+1, col) in ["BE", "LV", "VC"] and self.isLocked(row+1, col):
                     self.locked[row][col] = True
-                    self.updateLocks(row, col)
-        
+                    self.updateLocks(row, col)         
         
         # Dá lock às peças que não estão nos cantos nem nas arestas e às adjecentes
         else:
             if orientation == "FB":
-                down = self.adjacent_vertical_values(row, col)[1]
-                if down in ["BC", "BE", "BD", "VC", "VD", "LV"]:
+            
+                
+                if downPiece in ["BC", "BE", "BD", "VC", "VD", "LV"]:
                     if self.isLocked(row+1, col):
                         self.locked[row][col] = True
-            
+                        self.updateLocks(row, col)
+                
+                elif (((self.isLocked(row, col-1) and leftPiece in ["BE", "LV", "VC", "VE"]) or leftPiece.startswith("F")) and \
+                    ((self.isLocked(row-1, col) and upPiece in ["BC", "VC", "VD", "LH"] ) or upPiece.startswith("F")) and \
+                    ((self.isLocked(row, col+1) and rightPiece in ["BD", "LV", "VB", "VD"]) or rightPiece.startswith("F"))):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
                     
                    
         
             elif orientation == "FC":
-                up = self.adjacent_vertical_values(row, col)[0]
-                if up in ["BB", "BE", "BD", "VB", "VE", "LV"]:
+                if upPiece in ["BB", "BE", "BD", "VB", "VE", "LV"]:
                     if self.isLocked(row-1, col):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
+                        
+                elif (((self.isLocked(row, col-1) and leftPiece in ["BE", "LV", "VC", "VE"]) or leftPiece.startswith("F")) and \
+                    ((self.isLocked(row+1, col) and downPiece in ["BB", "VB", "VE", "LH"] ) or downPiece.startswith("F")) and \
+                    ((self.isLocked(row, col+1) and rightPiece in ["BD", "LV", "VB", "VD"]) or rightPiece.startswith("F"))):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
                 
                 
                     
         
             elif orientation == "FD":
-                right = self.adjacent_horizontal_values(row, col)[1]
-                if right in ["BB", "BC", "BE", "VC", "VE", "LH"]:
+                if rightPiece in ["BB", "BC", "BE", "VC", "VE", "LH"]:
                     if self.isLocked(row, col+1):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
+                
+                elif (((self.isLocked(row, col-1) and leftPiece in ["BE", "LV", "VC", "VE"]) or leftPiece.startswith("F")) and \
+                    ((self.isLocked(row-1, col) and upPiece in ["BC", "VC", "VD", "LH"] ) or upPiece.startswith("F")) and \
+                    ((self.isLocked(row+1, col) and downPiece in ["BB", "LH", "VB", "VE"]) or downPiece.startswith("F"))):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
                     
                     
             elif orientation == "FE":
-                left = self.adjacent_horizontal_values(row, col)[0]
-                if left in ["BB", "BC", "BD", "VB", "VD", "LH"]:
+                if leftPiece in ["BB", "BC", "BD", "VB", "VD", "LH"]:
                     if self.isLocked(row, col-1):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
+                
+                elif (((self.isLocked(row+1, col) and downPiece in ["BB", "LH", "VB", "VE"]) or downPiece.startswith("F")) and \
+                    ((self.isLocked(row-1, col) and upPiece in ["BC", "VC", "VD", "LH"] ) or upPiece.startswith("F")) and \
+                    ((self.isLocked(row, col+1) and rightPiece in ["BD", "LV", "VB", "VD"]) or rightPiece.startswith("F"))):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
                     
                     
             elif orientation == "BC":
-                left = self.adjacent_horizontal_values(row, col)[0]
-                right = self.adjacent_horizontal_values(row, col)[1]
-                up = self.adjacent_vertical_values(row, col)[0]
-                down = self.adjacent_vertical_values(row, col)[1]
-                if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"]:
+                
+                if leftPiece in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and rightPiece in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and upPiece in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"]:
                     if self.isLocked(row, col-1) and self.isLocked(row, col+1) and self.isLocked(row-1, col):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
             
-                if down in ["FB","FE", "FD","BB","VB","VE","LH"] and self.isLocked(row+1, col):
+                if downPiece in ["FB","FE", "FD","BB","VB","VE","LH"] and self.isLocked(row+1, col):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
         
             elif orientation == "BD":
-                up = self.adjacent_vertical_values(row, col)[0]
-                down = self.adjacent_vertical_values(row, col)[1]
-                right = self.adjacent_horizontal_values(row, col)[1]
-                left = self.adjacent_horizontal_values(row,col)[0]
-                if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
+                
+                if upPiece in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and downPiece in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and rightPiece in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
                     if self.isLocked(row-1, col) and self.isLocked(row+1, col) and self.isLocked(row, col+1):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
 
-                if left in ["FC","FB", "FE", "BE", "VC", "VE","LV"] and self.isLocked(row, col-1):
+                if leftPiece in ["FC","FB", "FE", "BE", "VC", "VE","LV"] and self.isLocked(row, col-1):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
         
             elif orientation == "BE":
-                up = self.adjacent_vertical_values(row, col)[0]
-                down = self.adjacent_vertical_values(row, col)[1]
-                left = self.adjacent_horizontal_values(row, col)[0]
-                right = self.adjacent_horizontal_values(row, col)[1]
-                if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
+                
+                if upPiece in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and downPiece in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and leftPiece in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
                     if self.isLocked(row-1, col) and self.isLocked(row+1, col) and self.isLocked(row, col-1):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
 
-                if right in ["FC","FB", "FD", "BD", "VB", "VD","LV"] and self.isLocked(row, col+1):
+                if rightPiece in ["FC","FB", "FD", "BD", "VB", "VD","LV"] and self.isLocked(row, col+1):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
         
             elif orientation == "BB":
-                left = self.adjacent_horizontal_values(row, col)[0]
-                right = self.adjacent_horizontal_values(row, col)[1]
-                down = self.adjacent_vertical_values(row, col)[1]
-                up = self.adjacent_vertical_values(row, col)[0]
-                if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]:
+               
+                if leftPiece in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and rightPiece in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and downPiece in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]:
                     if self.isLocked(row, col-1) and self.isLocked(row, col+1) and self.isLocked(row+1, col):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
 
-                if up in ["FC","FE", "FD", "BC", "VC", "VD","LH"] and self.isLocked(row-1, col):
+                if upPiece in ["FC","FE", "FD", "BC", "VC", "VD","LH"] and self.isLocked(row-1, col):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
             
             elif orientation == "VC":
-                up = self.adjacent_vertical_values(row, col)[0]
-                left = self.adjacent_horizontal_values(row, col)[0]
-                if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
+                
+                if upPiece in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and leftPiece in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
                     if self.isLocked(row-1, col) and self.isLocked(row, col-1):
                         self.locked[row][col] = True   
                         self.updateLocks(row, col)
+                
+                elif (leftPiece in left and downPiece not in down and self.isLocked(row, col-1) and self.isLocked(row+1, col)) or \
+                    (downPiece not in down and rightPiece not in right and self.isLocked(row+1, col) and self.isLocked(row, col+1)) or \
+                    (upPiece in up and rightPiece not in right and self.isLocked(row-1, col) and self.isLocked(row, col+1)):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
         
             elif orientation == "VB":
-                down = self.adjacent_vertical_values(row, col)[1]
-                right = self.adjacent_horizontal_values(row, col)[1]
-                if down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
+                
+                if downPiece in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and rightPiece in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
                     if self.isLocked(row+1, col) and self.isLocked(row, col+1):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
-                    
-            elif orientation == "VE":
-                down = self.adjacent_vertical_values(row, col)[1]
-                left = self.adjacent_horizontal_values(row, col)[0]
-                if down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
-                    if self.isLocked(row+1, col) and self.isLocked(row, col-1):
-                        self.locked[row][col] = True
+                        
+                elif (rightPiece in right and upPiece not in up and self.isLocked(row, col+1) and self.isLocked(row-1, col)) or \
+                    (upPiece not in up and leftPiece not in left and self.isLocked(row-1, col) and self.isLocked(row, col-1)) or \
+                    (downPiece in down and leftPiece not in left and self.isLocked(row+1, col) and self.isLocked(row, col-1)):
+                    self.locked[row][col] = True
                     self.updateLocks(row, col)
                     
+            elif orientation == "VE":
+      
+                if downPiece in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and leftPiece in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
+                    if self.isLocked(row+1, col) and self.isLocked(row, col-1):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+
+                    elif (leftPiece in left and upPiece not in up and self.isLocked(row, col-1) and self.isLocked(row-1, col)) or \
+                        (upPiece not in up and rightPiece not in right and self.isLocked(row-1, col) and self.isLocked(row, col+1)) or \
+                        (downPiece in down and rightPiece not in right and self.isLocked(row+1, col) and self.isLocked(row, col+1)):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+                    
             elif orientation == "VD":
-                up = self.adjacent_vertical_values(row, col)[0]
-                right = self.adjacent_horizontal_values(row, col)[1]
-                if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
+
+                if upPiece in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and rightPiece in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
                     if self.isLocked(row-1, col) and self.isLocked(row, col+1):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
+                
+                elif (rightPiece in right and downPiece not in down and self.isLocked(row, col+1) and self.isLocked(row+1, col)) or \
+                    (downPiece not in down and leftPiece not in left and self.isLocked(row+1, col) and self.isLocked(row, col-1)) or \
+                    (upPiece in up and leftPiece not in left and self.isLocked(row-1, col) and self.isLocked(row, col-1)):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
             
             elif orientation == "LH":
-                left = self.adjacent_horizontal_values(row, col)[0]
-                right = self.adjacent_horizontal_values(row, col)[1]
-                if left in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and self.isLocked(row, col-1):
+               
+                if leftPiece in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"] and self.isLocked(row, col-1):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                 
-                elif right in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and self.isLocked(row, col+1):
+                if rightPiece in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"] and self.isLocked(row, col+1):
+                    self.locked[row][col] = True
+                    self.updateLocks(row, col)
+                    
+                if (self.isLocked(row+1, col) and self.get_value(row+1, col) in ["LH", "BB", "FE", "FB", "FD", "VB", "VE"]) or \
+                    (self.isLocked(row-1, col) and self.get_value(row-1, col) in ["LH", "BC", "FD", "FC", "FE", "VD", "VC"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                         
             elif orientation == "LV":
-                up = self.adjacent_vertical_values(row, col)[0]
-                down = self.adjacent_vertical_values(row, col)[1]
-                if up in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and down in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]:
-                    if self.isLocked(row-1, col) and self.isLocked(row+1, col):
+
+                if upPiece in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"]:
+                    if self.isLocked(row-1, col):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+
+                if downPiece in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"]:
+                    if self.isLocked(row+1, col):
                         self.locked[row][col] = True
                         self.updateLocks(row, col)
                 
-                elif (self.isLocked(row, col-1) and self.get_value(row, col-1) in ["LV", "BE", "FE", "FC", "FB", "VC", "VE"]) or \
+                if (self.isLocked(row, col-1) and self.get_value(row, col-1) in ["LV", "BE", "FE", "FC", "FB", "VC", "VE"]) or \
                     (self.isLocked(row, col+1) and self.get_value(row, col+1) in ["LV", "BD", "FD", "FC", "FB", "VD", "VB"]):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
@@ -1508,11 +1587,23 @@ class PipeMania(Problem):
         elif downPiece in down and rightPiece in right and board.isLocked(row+1, col) and board.isLocked(row, col+1):
             return (row, col, "VB")
         
+        elif downPiece in down and leftPiece not in left and board.isLocked(row+1, col) and board.isLocked(row, col-1):
+            return (row, col, "VB")
+        
+        elif downPiece in down and rightPiece not in right and board.isLocked(row+1, col) and board.isLocked(row, col+1):
+            return (row, col, "VE")
+        
         elif leftPiece in left and downPiece not in down and board.isLocked(row, col-1) and board.isLocked(row+1, col):
             return (row, col, "VC")
         
         elif leftPiece in left and upPiece not in up and board.isLocked(row, col-1) and board.isLocked(row-1, col):
             return (row, col, "VE")
+        
+        elif upPiece in up and leftPiece not in left and board.isLocked(row-1, col) and board.isLocked(row, col-1):
+            return (row, col, "VD")
+        
+        elif upPiece in up and rightPiece not in right and board.isLocked(row-1, col) and board.isLocked(row, col+1):
+            return (row, col, "VC")
         
         elif rightPiece in right and downPiece not in down and board.isLocked(row, col+1) and board.isLocked(row+1, col):
             return (row, col, "VD")
@@ -1531,6 +1622,8 @@ class PipeMania(Problem):
         
         elif downPiece not in down and rightPiece not in right and board.isLocked(row+1, col) and board.isLocked(row, col+1):
             return (row, col, "VC")
+        
+        
     
 
     def checkIfLockedFecho(self, board, row, col):
