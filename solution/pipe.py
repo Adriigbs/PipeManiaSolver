@@ -42,11 +42,45 @@ class Board:
     locked = [] 
     connections = []
 
+
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
         return self.grid[row][col]
         
-
+    def checkForDeadEnds(self, side, row, col):
+          
+        if side == "up":
+            i = 1
+            p = self.get_value(row-1, col)
+            while True:
+                if p == "LV":
+                    i += 1
+                    if row-i < 0:
+                        return False
+                    p = self.get_value(row-i, col)
+                    if p == "FB":
+                        return True
+                    
+                else:
+                    return False
+            
+        elif side == "down":
+            i = 1
+            p = self.get_value(row+1, col)
+            if not self.isLocked(row+1, col):
+                return False
+            while True:
+                if p == "LV":
+                    i += 1
+                    if row+i >= len(self.grid):
+                        return False
+                    p = self.get_value(row+i, col)
+                    if p == "FC":
+                        return True 
+                    
+                else:
+                    return False       
+                        
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """ Devolve os valores imediatamente acima e abaixo,
@@ -871,6 +905,16 @@ class Board:
                     (upPiece in up and rightPiece not in right and self.isLocked(row-1, col) and self.isLocked(row, col+1)):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
+                
+                if upPiece == "FB" and self.isLocked(row-1, col):
+                    if rightPiece.startswith("F"):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+                    
+                if leftPiece == "FD" and self.isLocked(row, col-1):
+                    if downPiece.startswith("F"):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
         
             elif orientation == "VB":
                 
@@ -885,6 +929,17 @@ class Board:
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                     
+                if rightPiece == "FE" and self.isLocked(row, col+1):
+                    if upPiece.startswith("F"):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+
+                if (downPiece == "FC" and self.isLocked(row+1, col)) or \
+                    ( downPiece == "LV" and self.checkForDeadEnds("down", row, col)):
+                    if leftPiece.startswith("F"):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+                    
             elif orientation == "VE":
       
                 if downPiece in ["BC", "BE", "BD", "VC", "VD", "LV", "FC"] and leftPiece in ["BB", "BC", "BD", "VB", "VD", "LH", "FD"]:
@@ -898,6 +953,19 @@ class Board:
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
                     
+                if (downPiece == "FC" and self.isLocked(row+1, col)) or \
+                    (downPiece == "LV" and self.checkForDeadEnds("down", row, col)):
+                    if rightPiece.startswith("F"):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+                
+                if leftPiece == "FD" and self.isLocked(row, col-1):
+                    if upPiece.startswith("F"):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+                        
+                
+                    
             elif orientation == "VD":
 
                 if upPiece in ["BB", "BE", "BD", "VB", "VE", "LV", "FB"] and rightPiece in ["BB", "BC", "BE", "VC", "VE", "LH", "FE"]:
@@ -910,6 +978,17 @@ class Board:
                     (upPiece in up and leftPiece not in left and self.isLocked(row-1, col) and self.isLocked(row, col-1)):
                     self.locked[row][col] = True
                     self.updateLocks(row, col)
+                
+                if upPiece == "FB" and self.isLocked(row-1, col):
+                    if leftPiece.startswith("F"):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+                
+                if rightPiece == "FE" and self.isLocked(row, col+1):
+                    if downPiece.startswith("F"):
+                        self.locked[row][col] = True
+                        self.updateLocks(row, col)
+                
             
             elif orientation == "LH":
                
@@ -1302,6 +1381,8 @@ class PipeMania(Problem):
                 
                     if board.isLocked(i, j):
                         continue
+                    
+
                 
                     piece = board.get_value(i, j)
 
@@ -1429,11 +1510,7 @@ class PipeMania(Problem):
                                 actions.remove((i, j, "VC"))
                                 actions.remove((i, j, "VE"))
                                
-                        if not (board.isLocked(i+1, j) and board.isLocked(i-1, j) and \
-                                board.isLocked(i, j+1) and board.isLocked(i, j-1)):
-                            for action in actions:
-                                if action[0] == i and action[1] == j:
-                                    actions.remove(action)
+                        
                             
                     
                     
@@ -1575,6 +1652,33 @@ class PipeMania(Problem):
             return (row, col, "VC")
         
         
+                        
+        
+        if (downPiece == "FC" and board.isLocked(row+1, col)) or \
+            ( downPiece == "LV" and board.checkForDeadEnds("down", row, col)):
+            if rightPiece.startswith("F"):              
+                return (row, col, "VE")
+            elif leftPiece.startswith("F"):
+                return (row, col, "VB")
+        
+        if upPiece == "FB" and board.isLocked(row-1, col):
+            if rightPiece.startswith("F"):
+                return (row, col, "VC")
+            elif leftPiece.startswith("F"):
+                return (row, col, "VD")
+            
+        if leftPiece == "FD" and board.isLocked(row, col-1):
+            if upPiece.startswith("F"):
+                return (row, col, "VE")
+            elif downPiece.startswith("F"):
+                return (row, col, "VC")
+        
+        if rightPiece == "FE" and board.isLocked(row, col+1):
+            if upPiece.startswith("F"):
+                return (row, col, "VB")
+            elif downPiece.startswith("F"):
+                return (row, col, "VD")
+
     
 
     def checkIfLockedFecho(self, board, row, col):
@@ -1804,6 +1908,8 @@ class PipeMania(Problem):
 
         board = state.board.copy()
         row, col, orientation = action
+      
+        
         
         board.change_piece_orientation(row, col, orientation)
 
