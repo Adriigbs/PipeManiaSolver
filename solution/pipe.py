@@ -484,6 +484,10 @@ class PipeMania(Problem):
         print(board)
         
         print([[piece.getConnections() for piece in row] for row in board.grid])
+        print([[piece.isLocked() for piece in row] for row in board.grid])
+        def distance_from_border(row, col):
+            return min(row, col, len(board.grid) - 1 - row, len(board.grid[0]) - 1 - col)
+
         
         for row in range(len(state.board.grid)):
             for col in range(len(state.board.grid[row])):
@@ -606,8 +610,11 @@ class PipeMania(Problem):
                     if (row, col, piece, True) in actions:
                         actions.remove((row, col, piece, True))
                         
-                    
-        
+        actions.sort(key=lambda action: distance_from_border(action[0], action[1]))
+
+        if actions:
+            min_distance = distance_from_border(actions[0][0], actions[0][1])
+            actions = [action for action in actions if distance_from_border(action[0], action[1]) == min_distance]
         print("Actions: ", actions, "\n")
             
         return actions     
@@ -673,8 +680,8 @@ if __name__ == "__main__":
     
     goal_node = depth_first_tree_search(problem)
 
-    print("Is goal?", problem.goal_test(goal_node.state), "\n")
-    print("Solution:\n")
+    #print("Is goal?", problem.goal_test(goal_node.state), "\n")
+    #print("Solution:\n")
     print(goal_node.state.board)
     
 
