@@ -499,54 +499,54 @@ class PipeMania(Problem):
                 if piece.type() == "F":
                     if board.checkIfLocks(row, col, "FB"):
                         actions.append((row, col, "FB", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "FD"):
                         actions.append((row, col, "FD", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "FE"):
                         actions.append((row, col, "FE", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "FC"):
                         actions.append((row, col, "FC", True))
-                        continue
+                        break
             
                 elif piece.type() == "L":
                     if board.checkIfLocks(row, col, "LV"):
                         actions.append((row, col, "LV", True))
-                        continue
+                        break   
                     elif board.checkIfLocks(row, col, "LH"):
                         actions.append((row, col, "LH", True))
-                        continue
+                        break   
                     
                 
                 elif piece.type() == "B":
                     if board.checkIfLocks(row, col, "BB"):
                         actions.append((row, col, "BB", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "BC"):
                         actions.append((row, col, "BC", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "BD"):
                         actions.append((row, col, "BD", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "BE"):
                         actions.append((row, col, "BE", True))
-                        continue
+                        break   
                     
                     
                 elif piece.type() == "V":
                     if board.checkIfLocks(row, col, "VB"):
                         actions.append((row, col, "VB", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "VC"):
                         actions.append((row, col, "VC", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "VD"):
                         actions.append((row, col, "VD", True))
-                        continue
+                        break
                     elif board.checkIfLocks(row, col, "VE"):
                         actions.append((row, col, "VE", True))
-                        continue
+                        break
                         
                 
                 if (row, col, piece, False) in actions:
