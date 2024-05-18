@@ -448,15 +448,31 @@ class Board:
         if piece.isLocked():
             return []
         
+        if leftPiece.isLocked() and upPiece.isLocked and piece.connectsWith(leftPiece, "left") and piece.connectsWith(upPiece, "up"):
+            return [(row, col, "BC", False), (row, col, "BE", False)]
+        
+        if leftPiece.isLocked() and downPiece.isLocked and piece.connectsWith(leftPiece, "left") and piece.connectsWith(downPiece, "down"):
+            return [(row, col, "BB", False), (row, col, "BE", False)]
+        
+        if rightPiece.isLocked() and downPiece.isLocked and piece.connectsWith(rightPiece, "right") and piece.connectsWith(downPiece, "down"):
+            return [(row, col, "BD", False), (row, col, "BB", False)]
+        
+        if rightPiece.isLocked() and upPiece.isLocked and piece.connectsWith(rightPiece, "right") and piece.connectsWith(upPiece, "up"):
+            return [(row, col, "BD", False), (row, col, "BC", False)]
+
         if leftPiece != None and leftPiece.isLocked() and piece.connectsWith(leftPiece, "left"):
+            
             return [(row, col, "BB", False), (row, col, "BC", False), (row, col, "BE", False)]
         if rightPiece != None and rightPiece.isLocked() and piece.connectsWith(rightPiece, "right"):
+            
             return [(row, col, "BB", False), (row, col, "BD", False), (row, col, "BC", False)]
         if upPiece != None and upPiece.isLocked() and piece.connectsWith(upPiece, "up"):
+            
             return [(row, col, "BC", False), (row, col, "BE", False), (row, col, "BD", False)]
         if downPiece != None and downPiece.isLocked() and piece.connectsWith(downPiece, "down"):
+            
             return [(row, col, "BB", False), (row, col, "BE", False), (row, col, "BD", False)]
-        
+
         return [(row, col, "BB", False), (row, col, "BC", False), (row, col, "BE", False), (row, col, "BD", False)]
 
 
@@ -784,6 +800,9 @@ class PipeMania(Problem):
                 if lock_actions != []:
                     return lock_actions
                         
+                if len(actions) == 1 and actions[0][3]:
+                    break
+       
         print("Actions: ", actions, "\n")
         return actions    
     
@@ -862,11 +881,8 @@ class PipeMania(Problem):
                 if in_bounds(nx, ny) and not visitedPos[nx][ny]:
                     stack.append((nx, ny))
                 
-
         
         return all(all(row) for row in visitedPos)
-       
-
 
 
     def h(self, node: Node):
