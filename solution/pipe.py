@@ -152,7 +152,7 @@ class Board:
         """Compara o tabuleiro com outro tabuleiro passado como argumento."""
         for row in range(len(self.grid)):
             for col in range(len(self.grid[row])):
-                if self.grid[row][col] != other.grid[row][col]:
+                if (self.grid[row][col] != other.grid[row][col]) or (self.grid[row][col].isLocked() != other.grid[row][col].isLocked()):
                     return False
         
         return True
@@ -345,13 +345,25 @@ class Board:
         
         else:
             if orientation == "FB":
-                return conditions["downConnects"] or (conditions["upDoesntConnect"] and conditions["leftDoesntConnect"] and conditions["rightDoesntConnect"])
+                return conditions["downConnects"] or \
+                    ((conditions["upDoesntConnect"] or upPiece.type() == "F") and \
+                    (conditions["leftDoesntConnect"] or leftPiece.type() == "F") and \
+                    (conditions["rightDoesntConnect"] or rightPiece.type() == "F"))
             elif orientation == "FD":
-                return conditions["rightConnects"] or (conditions["downDoesntConnect"] and conditions["upDoesntConnect"] and conditions["leftDoesntConnect"])
+                return conditions["rightConnects"] or \
+                    ((conditions["downDoesntConnect"] or downPiece.type() == "F") and \
+                    (conditions["upDoesntConnect"] or upPiece.type() == "F") and \
+                    (conditions["leftDoesntConnect"] or leftPiece.type() == "F"))
             elif orientation == "FE":
-                return conditions["leftConnects"] or (conditions["downDoesntConnect"] and conditions["upDoesntConnect"] and conditions["rightDoesntConnect"])
+                return conditions["leftConnects"] or \
+                    ((conditions["downDoesntConnect"] or downPiece.type() == "F") and \
+                     (conditions["upDoesntConnect"] or upPiece.type() == "F") and \
+                     (conditions["rightDoesntConnect"] or rightPiece.type() == "F"))
             elif orientation == "FC":
-                return conditions["upConnects"] or (conditions["downDoesntConnect"] and conditions["leftDoesntConnect"] and conditions["rightDoesntConnect"])
+                return conditions["upConnects"] or \
+                    ((conditions["downDoesntConnect"] or downPiece.type() == "F") and \
+                     (conditions["leftDoesntConnect"] or leftPiece.type() == "F") and \
+                     (conditions["rightDoesntConnect"] or rightPiece.type() == "F"))
             
             elif orientation == "LH":
                 return (conditions["leftConnects"] or conditions["rightConnects"]) or (conditions["upDoesntConnect"] or conditions["downDoesntConnect"])
@@ -414,13 +426,13 @@ class Board:
         
         actions.extend([(row, col, "FB", False), (row, col, "FD", False), (row, col, "FE", False), (row, col, "FC", False)])
         
-        if leftPiece != None and leftPiece.isLocked() and not piece.connectsWith(leftPiece, "left"):
+        if leftPiece != None and ((leftPiece.isLocked() and not piece.connectsWith(leftPiece, "left")) or leftPiece.type() == "F"):
             actions.remove((row, col, "FE", False))
-        if rightPiece != None and rightPiece.isLocked() and not piece.connectsWith(rightPiece, "right"):
+        if rightPiece != None and ((rightPiece.isLocked() and not piece.connectsWith(rightPiece, "right")) or rightPiece.type() == "F"):
             actions.remove((row, col, "FD", False))
-        if upPiece != None and upPiece.isLocked() and not piece.connectsWith(upPiece, "up"):
+        if upPiece != None and ((upPiece.isLocked() and not piece.connectsWith(upPiece, "up")) or upPiece.type() == "F"):
             actions.remove((row, col, "FC", False))
-        if downPiece != None and downPiece.isLocked() and not piece.connectsWith(downPiece, "down"):
+        if downPiece != None and ((downPiece.isLocked() and not piece.connectsWith(downPiece, "down")) or downPiece.type() == "F"):
             actions.remove((row, col, "FB", False))
         
         return actions
@@ -581,6 +593,7 @@ class PipeMania(Problem):
         partir do estado passado como argumento."""
         
         actions = []
+        lock_actions = []
         board = state.board
         
         if self.isVisited(board):
@@ -682,10 +695,10 @@ class PipeMania(Problem):
                     leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
                     upPiece, downPiece = board.adjacent_vertical_values(row, col)
                     
-                    if (row, col) in state.moved:
+                    if piece.isLocked():
                         continue
                     
-                    if piece.isLocked():
+                    if (row, col) in state.moved:
                         continue
                     
                     functions = {
@@ -696,31 +709,40 @@ class PipeMania(Problem):
                     }
                     
                     connects = {
-                        "up": False,
-                        "down": False,
-                        "left": False,
-                        "right": False
+                        "up": None,
+                        "down": None,
+                        "left": None,
+                        "right": None
                     }
+                    
+                    print(f"Piece: {piece} on {(row, col)}\n")
+                    
                     
                     if leftPiece != None:
                         possibleActions = functions[leftPiece.type()](row, col-1)
+                        print(f"{(row, col-1)}: {possibleActions}")
                         if possibleActions != [] and all([piece.connectsWith(Piece(orien[2]), "left") for orien in possibleActions]):
+                            print("Connects left")
                             connects["left"] = True
                     if rightPiece != None:
                         possibleActions = functions[rightPiece.type()](row, col+1)
+                        print(f"{(row, col+1)}: {possibleActions}")
                         if possibleActions != [] and all([piece.connectsWith(Piece(orien[2]), "right") for orien in possibleActions]):
+                            print("Connects right")
                             connects["right"] = True
                     if upPiece != None:
                         possibleActions = functions[upPiece.type()](row-1, col)
+                        print(f"{(row-1, col)}: {possibleActions}")
                         if possibleActions != [] and all([piece.connectsWith(Piece(orien[2]), "up") for orien in possibleActions]):
+                            print("Connects up")
                             connects["up"] = True
                     if downPiece != None:
                         possibleActions = functions[downPiece.type()](row+1, col)
+                        print(f"{(row+1, col)}: {possibleActions}")
                         if possibleActions != [] and all([piece.connectsWith(Piece(orien[2]), "down") for orien in possibleActions]):
+                            print("Connects down")
                             connects["down"] = True
                         
-                    
-                    
                     if piece.type() == "F":
                         if connects["up"]:
                             actions.append((row, col, "FC", True))
@@ -738,6 +760,14 @@ class PipeMania(Problem):
                         actions.extend(board.fechoPossibleActions(row, col))
                     
                     elif piece.type() == "L":
+                        if connects["up"] or connects["down"]:
+                            lock_actions.append((row, col, "LV", True))
+                            break
+                        if connects["left"] or connects["right"]:
+                            lock_actions.append((row, col, "LH", True))
+                            break
+
+                        
                         actions.extend(board.ligacaoPossibleActions(row, col))
                     
                     elif piece.type() == "B":
@@ -751,18 +781,12 @@ class PipeMania(Problem):
                     if (row, col, piece, True) in actions:
                         actions.remove((row, col, piece, True))
                 
-                if len(actions) == 1 and actions[0][3]:
-                    break
+                if lock_actions != []:
+                    return lock_actions
                         
-                    
-                        
-        
-
-       
         print("Actions: ", actions, "\n")
         return actions    
     
-
 
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
@@ -774,11 +798,9 @@ class PipeMania(Problem):
         
         row, col, orientation, isLocked = action
         
-        
         moved = copy.deepcopy(state.moved)
         moved.append((row, col))
 
-        
         board.change_piece_orientation(row, col, orientation)
         board.updateConnections(row, col)
         board.updateConnections(row+1, col)
@@ -787,10 +809,7 @@ class PipeMania(Problem):
         board.updateConnections(row, col-1)
         if isLocked:
             board.lockPiece(row, col)
-        
-        
-    
-        
+
         return PipeManiaState(board, moved)
 
 
