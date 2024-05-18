@@ -611,23 +611,8 @@ class PipeMania(Problem):
         actions = []
         lock_actions = []
         board = state.board
-        
-        if self.isVisited(board):
-            print("State already visited\n")
-            return actions
-        
-        self.visited.append(board)
-        
-        print("Expanding state: ", state.id, "\n")
-        print(board)
-        
-        st = ""
-        for row in range(len(state.board.grid)):
-            for col in range(len(state.board.grid[row])):
-                st += f"{state.board.grid[row][col].isLocked()}" + " "
-            st += "\n"
-        print(st)
-        
+     
+     
         def distance_from_border(row, col):
             return min(row, col, len(board.grid) - 1 - row, len(board.grid[0]) - 1 - col)
 
@@ -705,6 +690,8 @@ class PipeMania(Problem):
                 break
                     
         if actions == []:
+            
+         
             for row in range(len(state.board.grid)):
                 for col in range(len(state.board.grid[row])):
                     piece = board.getPiece(row, col)
@@ -725,39 +712,71 @@ class PipeMania(Problem):
                     }
                     
                     connects = {
-                        "up": None,
-                        "down": None,
-                        "left": None,
-                        "right": None
+                        "up": False,
+                        "down": False,
+                        "left": False,
+                        "right": False
                     }
                     
-                    print(f"Piece: {piece} on {(row, col)}\n")
-                    
+                    notConnects = {
+                        "up": False,
+                        "down": False,
+                        "left": False,
+                        "right": False
+                    }
                     
                     if leftPiece != None:
                         possibleActions = functions[leftPiece.type()](row, col-1)
-                        print(f"{(row, col-1)}: {possibleActions}")
                         if possibleActions != [] and all([piece.connectsWith(Piece(orien[2]), "left") for orien in possibleActions]):
-                            print("Connects left")
                             connects["left"] = True
+                        elif possibleActions != []:
+                            aux = []
+                            for action in possibleActions:
+                                if not piece.connectsWith(Piece(action[2]), "left"):
+                                    aux.append(True)
+                                else:
+                                    aux.append(False)
+                            if all(aux):
+                                notConnects["left"] = True
                     if rightPiece != None:
                         possibleActions = functions[rightPiece.type()](row, col+1)
-                        print(f"{(row, col+1)}: {possibleActions}")
                         if possibleActions != [] and all([piece.connectsWith(Piece(orien[2]), "right") for orien in possibleActions]):
-                            print("Connects right")
                             connects["right"] = True
+                        elif possibleActions != []:
+                            aux = []
+                            for action in possibleActions:
+                                if not piece.connectsWith(Piece(action[2]), "right"):
+                                    aux.append(True)
+                                else:
+                                    aux.append(False)
+                            if all(aux):
+                                notConnects["right"] = True
                     if upPiece != None:
                         possibleActions = functions[upPiece.type()](row-1, col)
-                        print(f"{(row-1, col)}: {possibleActions}")
                         if possibleActions != [] and all([piece.connectsWith(Piece(orien[2]), "up") for orien in possibleActions]):
-                            print("Connects up")
                             connects["up"] = True
+                        elif possibleActions != []:
+                            aux = []
+                            for action in possibleActions:
+                                if not piece.connectsWith(Piece(action[2]), "up"):
+                                    aux.append(True)
+                                else:
+                                    aux.append(False)
+                            if all(aux):
+                                notConnects["up"] = True
                     if downPiece != None:
                         possibleActions = functions[downPiece.type()](row+1, col)
-                        print(f"{(row+1, col)}: {possibleActions}")
                         if possibleActions != [] and all([piece.connectsWith(Piece(orien[2]), "down") for orien in possibleActions]):
-                            print("Connects down")
                             connects["down"] = True
+                        elif possibleActions != []:
+                            aux = []
+                            for action in possibleActions:
+                                if not piece.connectsWith(Piece(action[2]), "down"):
+                                    aux.append(True)
+                                else:
+                                    aux.append(False)
+                            if all(aux):
+                                notConnects["down"] = True
                         
                     if piece.type() == "F":
                         if connects["up"]:
@@ -776,10 +795,10 @@ class PipeMania(Problem):
                         actions.extend(board.fechoPossibleActions(row, col))
                     
                     elif piece.type() == "L":
-                        if connects["up"] or connects["down"]:
+                        if connects["up"] or connects["down"] or notConnects["left"] or notConnects["right"]:
                             lock_actions.append((row, col, "LV", True))
                             break
-                        if connects["left"] or connects["right"]:
+                        if connects["left"] or connects["right"] or notConnects["up"] or notConnects["down"]:
                             lock_actions.append((row, col, "LH", True))
                             break
 
@@ -787,9 +806,45 @@ class PipeMania(Problem):
                         actions.extend(board.ligacaoPossibleActions(row, col))
                     
                     elif piece.type() == "B":
+                        if (connects["up"] and connects["left"] and connects["right"]) or notConnects["down"]:
+                            lock_actions.append((row, col, "BC", True))
+                            break
+                        if (connects["down"] and connects["left"] and connects["right"]) or notConnects["up"]:
+                            lock_actions.append((row, col, "BB", True))
+                            break
+                        if (connects["right"] and connects["up"] and connects["down"]) or notConnects["left"]:
+                            lock_actions.append((row, col, "BD", True))
+                            break
+                        if (connects["left"] and connects["up"] and connects["down"]) or notConnects["right"]:
+                            lock_actions.append((row, col, "BE", True))
+                            break 
                         actions.extend(board.bifurcationPossibleActions(row, col))
                     
                     elif piece.type() == "V":
+                        if (connects["up"] and connects["left"]) or \
+                            (connects["left"] and notConnects["down"]) or \
+                            (connects["up"] and notConnects["right"]) or \
+                            (notConnects["down"] and notConnects["right"]):
+                            lock_actions.append((row, col, "VC", True))
+                            break
+                        if (connects["up"] and connects["right"]) or \
+                            (connects["right"] and notConnects["down"]) or \
+                            (connects["up"] and notConnects["left"]) or \
+                            (notConnects["down"] and notConnects["left"]):
+                            lock_actions.append((row, col, "VD", True))
+                            break
+                        if (connects["down"] and connects["left"]) or \
+                            (connects["left"] and notConnects["up"]) or \
+                            (connects["down"] and notConnects["right"]) or \
+                            (notConnects["up"] and notConnects["right"]):
+                            lock_actions.append((row, col, "VE", True))
+                            break
+                        if (connects["down"] and connects["right"]) or \
+                            (connects["right"] and notConnects["up"]) or \
+                            (connects["down"] and notConnects["left"]) or \
+                            (notConnects["up"] and notConnects["left"]):
+                            lock_actions.append((row, col, "VB", True))
+                            break
                         actions.extend(board.voltaPossibleActions(row, col))
                     
                     if (row, col, piece, False) in actions:
@@ -800,9 +855,11 @@ class PipeMania(Problem):
                 if lock_actions != []:
                     return lock_actions
                         
-             
-       
-        print("Actions: ", actions, "\n")
+
+        if actions:
+            min_distance = distance_from_border(actions[0][0], actions[0][1])
+            actions = [action for action in actions if distance_from_border(action[0], action[1]) == min_distance]                
+     
         return actions    
     
 
@@ -820,6 +877,9 @@ class PipeMania(Problem):
         moved.append((row, col))
 
         board.change_piece_orientation(row, col, orientation)
+        leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
+        upPiece, downPiece = board.adjacent_vertical_values(row, col)
+        
         board.updateConnections(row, col)
         board.updateConnections(row+1, col)
         board.updateConnections(row-1, col)
@@ -827,7 +887,16 @@ class PipeMania(Problem):
         board.updateConnections(row, col-1)
         if isLocked:
             board.lockPiece(row, col)
+            if upPiece != None and board.checkIfLocks(row-1, col, upPiece.getOrientation()):
+                board.lockPiece(row-1, col)
+            if downPiece != None and board.checkIfLocks(row+1, col, downPiece.getOrientation()):
+                board.lockPiece(row+1, col)
+            if leftPiece != None and board.checkIfLocks(row, col-1, leftPiece.getOrientation()):
+                board.lockPiece(row, col-1)
+            if rightPiece != None and board.checkIfLocks(row, col+1, rightPiece.getOrientation()):
+                board.lockPiece(row, col+1)
 
+        
         return PipeManiaState(board, moved)
 
 
@@ -887,29 +956,42 @@ class PipeMania(Problem):
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
         state = node.state
-        heuristic_value = 0
-        for row in state.board.grid:
-            for piece in row:
-                heuristic_value += max(0, 2 - piece.connections)
-        return heuristic_value
+        
+        heuristicScore = 0
+        
+        def countConnectionsWithLockedPieces(row, col):
+            connections = 0
+            piece = state.board.getPiece(row, col)
+            if piece.isLocked():
+                return 0
+            leftPiece, rightPiece = state.board.adjacent_horizontal_values(row, col)
+            upPiece, downPiece = state.board.adjacent_vertical_values(row, col)
+            
+            if leftPiece != None and leftPiece.isLocked() and piece.isConnected(leftPiece, "left"):
+                connections += 1
+            if rightPiece != None and rightPiece.isLocked() and piece.isConnected(rightPiece, "right"):
+                connections += 1
+            if upPiece != None and upPiece.isLocked() and piece.isConnected(upPiece, "up"):
+                connections += 1
+            if downPiece != None and downPiece.isLocked() and piece.isConnected(downPiece, "down"):
+                connections += 1
+            
+            return connections
+            
+        for row in range(len(state.board.grid)):
+            for col in range(len(state.board.grid[row])):
+                heuristicScore += countConnectionsWithLockedPieces(row, col)
+                
+        return - heuristicScore
+        
 
 if __name__ == "__main__":
-    # TODO:
-    # Ler o ficheiro do standard input,
-    # Usar uma técnica de procura para resolver a instância,
-    # Retirar a solução a partir do nó resultante,
-    # Imprimir para o standard output no formato indicado.
 
-
-
-    # Teste da classe Board e goal test
     board = Board.parse_instance()
     problem = PipeMania(board)
-    
+
     goal_node = depth_first_tree_search(problem)
 
-    print("Is goal?", problem.goal_test(goal_node.state), "\n")
-    print("Solution:\n")
     print(goal_node.state.board)
     
 
