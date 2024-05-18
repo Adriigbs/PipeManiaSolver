@@ -800,8 +800,7 @@ class PipeMania(Problem):
                 if lock_actions != []:
                     return lock_actions
                         
-                if len(actions) == 1 and actions[0][3]:
-                    break
+             
        
         print("Actions: ", actions, "\n")
         return actions    
