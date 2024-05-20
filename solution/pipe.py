@@ -512,7 +512,33 @@ class Board:
         
         return [(row, col, "VB", False), (row, col, "VD", False), (row, col, "VE", False), (row, col, "VC", False)]
    
-    
+    def notSolvedIslands(self):
+        board = self.board
+        
+        for row in range(len(board.grid)):
+            for col in range(len(board.grid[row])):
+                piece = board.getPiece(row, col)
+                leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
+                upPiece, downPiece = board.adjacent_vertical_values(row, col)
+                
+                island = []
+                if not piece.isLocked(): 
+                    if not leftPiece.isLocked():
+                        island += [(row,col),(row,col-1)]
+                    
+                    if not rightPiece.isLocked():
+                        island += [(row,col),(row,col+1)]
+
+                    if not upPiece.isLocked():
+                        island += [(row,col),(row-1,col)]
+
+                    if not downPiece.isLocked():
+                        island += [(row,col),(row+1,col)]
+
+                island = list(dict.fromkeys(island))
+
+        return island
+
     
 class Piece:
     
