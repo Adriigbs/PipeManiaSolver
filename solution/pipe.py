@@ -41,6 +41,7 @@ class Board:
     """Representação interna de um tabuleiro de PipeMania."""
 
     grid = [] # Lista de listas de strings
+    lastPieceMoved = None
    
     def getPiece(self, row: int, col: int):
         return self.grid[row][col]
@@ -143,6 +144,7 @@ class Board:
         """Muda a orientação da peça na posição (row, col) para a
         orientação passada como argumento."""
         self.grid[row][col].setOrientation(orientation)
+        self.lastPieceMoved = (row, col)
 
     def lockPiece(self, row: int, col: int):
         """Bloqueia a peça na posição (row, col)."""
@@ -512,33 +514,7 @@ class Board:
         
         return [(row, col, "VB", False), (row, col, "VD", False), (row, col, "VE", False), (row, col, "VC", False)]
    
-    def notSolvedIslands(self):
-        board = self.board
-        
-        for row in range(len(board.grid)):
-            for col in range(len(board.grid[row])):
-                piece = board.getPiece(row, col)
-                leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
-                upPiece, downPiece = board.adjacent_vertical_values(row, col)
-                
-                island = []
-                if not piece.isLocked(): 
-                    if not leftPiece.isLocked():
-                        island += [(row,col),(row,col-1)]
-                    
-                    if not rightPiece.isLocked():
-                        island += [(row,col),(row,col+1)]
-
-                    if not upPiece.isLocked():
-                        island += [(row,col),(row-1,col)]
-
-                    if not downPiece.isLocked():
-                        island += [(row,col),(row+1,col)]
-
-                island = list(dict.fromkeys(island))
-
-        return island
-
+    
     
 class Piece:
     
@@ -583,6 +559,10 @@ class Piece:
     
     def getConnections(self):
         return self.connections
+    
+    def getMaxConnections(self):
+        type = self.orientation[0]
+        return { "B": 3, "V": 2, "F": 1, "L": 2 }[type]
     
     
     def updateConnections(self, value: int):
@@ -647,7 +627,19 @@ class PipeMania(Problem):
         lock_actions = []
         board = state.board
     
-   
+        if self.isVisited(board):
+            return actions
+     
+        print("Expanding state: ", state.id, "\n")
+        print(board)
+        
+        st = ""
+        for row in range(len(state.board.grid)):
+            for col in range(len(state.board.grid[row])):
+                st += f"{state.board.grid[row][col].isLocked()}" + " "
+            st += "\n"
+        print(st)
+        
         
         def countLockedAround(row, col):
             leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
@@ -751,7 +743,8 @@ class PipeMania(Problem):
                         count += 0.5
             
             return count
-            
+        
+      
         
         for row in range(len(state.board.grid)):
             for col in range(len(state.board.grid[row])):
@@ -995,16 +988,19 @@ class PipeMania(Problem):
                 
             if actions != []:
                 actions.sort(key=lambda x: countLockedAround(x[0], x[1]))
+                print("Actions: ", actions, "\n")
                 ac = []
                 row, col = actions[-1][0], actions[-1][1]
                 for action in actions:
                     if row == action[0] and col == action[1]:
                         ac.append(action)
                 ac.sort(key=lambda x: countConnectionsAround(x[0], x[1], x[2]))
+                print("Actions: ", ac, "\n")
                 return ac
                     
                         
         
+        print("Actions: ", actions, "\n")
         return actions    
     
 
@@ -1100,21 +1096,73 @@ class PipeMania(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        h = 0
         state = node.state
+        heuristicScore = 0    
+        
+        openings = {
+            "FC": [(-1, 0)],
+            "FD": [(0, 1)],
+            "FE": [(0, -1)],
+            "FB": [(1, 0)],
+            "VC": [(-1, 0), (0, -1)],
+            "VD": [(0, 1), (-1, 0)],
+            "VE": [(0, -1), (1, 0)],
+            "VB": [(1, 0), (0, 1)],
+            "BB": [(1, 0), (0, 1), (0, -1)],
+            "BC": [(0, 1), (0, -1), (-1, 0)],
+            "BD": [(0, 1), (-1, 0), (1, 0)],
+            "BE": [(0, -1), (1, 0), (-1, 0)],
+            "LV": [(-1, 0), (1, 0)],
+            "LH": [(0, -1), (0, 1)],	
+        }
+          
+        def in_bounds(x, y):
+            return x >= 0 and x < len(state.board.grid) and y >= 0 and y < len(state.board.grid[x])   
+        
+        def checkIslands(row, col):
+            visitedPos = []
+            
+            stack = [(row, col)]
+            while stack:
+                x, y = stack.pop()
+                if not state.board.getPiece(x, y).isAllConnected():
+                    return False
+                visitedPos.append((x, y))    
+                
+                for xap, yap in openings[state.board.getPiece(x, y).getOrientation()]:
+                    nx, ny = x + xap, y + yap
+                    if in_bounds(nx, ny) and (nx, ny) not in visitedPos:
+                        stack.append((nx, ny))
+                
+            if len(visitedPos) != (len(state.board.grid[0]) * len(state.board.grid)):
+                return True
+        
+        
+        
+            
         for row in range(len(state.board.grid)):
             for col in range(len(state.board.grid[row])):
                 piece = state.board.getPiece(row, col)
-                if piece.isAllConnected():
-                    h += 1
-        return -h
+                
+                if piece.isLocked():
+                    continue
+                
+                heuristicScore += piece.getConnections()
+                
+                if checkIslands(row, col):
+                    heuristicScore -= 1000
+                
+             
+                
+        return - heuristicScore
+        
 
 if __name__ == "__main__":
 
     board = Board.parse_instance()
     problem = PipeMania(board)
 
-    goal_node = depth_first_tree_search(problem)
+    goal_node = astar_search(problem)
 
     print(goal_node.state.board)
     
