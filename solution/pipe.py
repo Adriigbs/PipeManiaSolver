@@ -594,6 +594,13 @@ class Piece:
             return False
         
         return piece.orientation in self.connectWith[direction]
+    
+    def isIncoming(self, piece, direction):
+        return piece.orientation in self.connectWith[direction] and self.orientation not in self.openTo[direction]
+    
+    def notIncoming(self, piece, direction):
+        return piece.orientation not in self.connectWith[direction] and self.orientation in self.openTo[direction]
+            
         
     def __str__(self):
         return self.orientation
@@ -627,19 +634,8 @@ class PipeMania(Problem):
         lock_actions = []
         board = state.board
     
-        if self.isVisited(board):
-            return actions
-     
-        print("Expanding state: ", state.id, "\n")
-        print(board)
-        
-        st = ""
-        for row in range(len(state.board.grid)):
-            for col in range(len(state.board.grid[row])):
-                st += f"{state.board.grid[row][col].isLocked()}" + " "
-            st += "\n"
-        print(st)
-        
+        print("Expanding state", state.id, "\n")  
+        print(board, "\n")
         
         def countLockedAround(row, col):
             leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
@@ -744,7 +740,7 @@ class PipeMania(Problem):
             
             return count
         
-      
+        la = []
         
         for row in range(len(state.board.grid)):
             for col in range(len(state.board.grid[row])):
@@ -754,71 +750,72 @@ class PipeMania(Problem):
                 if board.checkIfLocks(row, col, piece.getOrientation()):
                     board.lockPiece(row, col)
                 
+                
                 if piece.isLocked():
                     continue
                 
                 if piece.type() == "F":
                     if board.checkIfLocks(row, col, "FB"):
-                        actions.append((row, col, "FB", True))
-                        break
+                        la.append((row, col, "FB", True))
+                        continue
                     elif board.checkIfLocks(row, col, "FD"):
-                        actions.append((row, col, "FD", True))
-                        break
+                        la.append((row, col, "FD", True))
+                        continue
                     elif board.checkIfLocks(row, col, "FE"):
-                        actions.append((row, col, "FE", True))
-                        break
+                        la.append((row, col, "FE", True))
+                        continue
                     elif board.checkIfLocks(row, col, "FC"):
-                        actions.append((row, col, "FC", True))
-                        break
+                        la.append((row, col, "FC", True))
+                        continue
             
                 elif piece.type() == "L":
                     if board.checkIfLocks(row, col, "LV"):
-                        actions.append((row, col, "LV", True))
-                        break   
+                        la.append((row, col, "LV", True))
+                        continue
                     elif board.checkIfLocks(row, col, "LH"):
-                        actions.append((row, col, "LH", True))
-                        break   
-                    
+                        la.append((row, col, "LH", True))
+                        continue
                 
                 elif piece.type() == "B":
                     if board.checkIfLocks(row, col, "BB"):
-                        actions.append((row, col, "BB", True))
-                        break
+                        la.append((row, col, "BB", True))
+                        continue
                     elif board.checkIfLocks(row, col, "BC"):
-                        actions.append((row, col, "BC", True))
-                        break
+                        la.append((row, col, "BC", True))
+                        continue
                     elif board.checkIfLocks(row, col, "BD"):
-                        actions.append((row, col, "BD", True))
-                        break
+                        la.append((row, col, "BD", True))
+                        continue
                     elif board.checkIfLocks(row, col, "BE"):
-                        actions.append((row, col, "BE", True))
-                        break   
+                        la.append((row, col, "BE", True))
+                        continue
                     
                     
                 elif piece.type() == "V":
                     if board.checkIfLocks(row, col, "VB"):
-                        actions.append((row, col, "VB", True))
-                        break
+                        la.append((row, col, "VB", True))
+                        continue
                     elif board.checkIfLocks(row, col, "VC"):
-                        actions.append((row, col, "VC", True))
-                        break
+                        la.append((row, col, "VC", True))
+                        continue
                     elif board.checkIfLocks(row, col, "VD"):
-                        actions.append((row, col, "VD", True))
-                        break
+                        la.append((row, col, "VD", True))
+                        continue
                     elif board.checkIfLocks(row, col, "VE"):
-                        actions.append((row, col, "VE", True))
-                        break
+                        la.append((row, col, "VE", True))
+                        continue
                         
                 
-                if (row, col, piece, False) in actions:
-                    actions.remove((row, col, piece, False))
-                if (row, col, piece, True) in actions:
-                    actions.remove((row, col, piece, True))
+                if (row, col, piece, True) in la:
+                    la.remove((row, col, piece, True))
                 
-            if actions != []:
-                break
+        if la != []:
+            actions.append([la])
+            print("LA: ", la, "\n")
+            return actions
                     
-        if actions == []:
+        if la == []:
+         
             for row in range(len(state.board.grid)):
                 for col in range(len(state.board.grid[row])):
                     piece = board.getPiece(row, col)
@@ -828,7 +825,7 @@ class PipeMania(Problem):
                     if piece.isLocked():
                         continue
                         
-                    if (row, col) in state.moved:
+                    if state.moved != [] and (row, col) == state.moved[-1]:
                         continue
                     
                     functions = {
@@ -978,30 +975,111 @@ class PipeMania(Problem):
                   
                     if (row, col, piece, True) in actions:
                         actions.remove((row, col, piece, True))
+                   
                         
                         
                 
                 if lock_actions != []:
                     return lock_actions
                 
-            self.counter += 1
-                
+           
+            
             if actions != []:
                 actions.sort(key=lambda x: countLockedAround(x[0], x[1]))
-                print("Actions: ", actions, "\n")
+                print("Actions: ", actions)
                 ac = []
-                row, col = actions[-1][0], actions[-1][1]
-                for action in actions:
-                    if row == action[0] and col == action[1]:
-                        ac.append(action)
+                
+                actions = [action for action in actions if self.removeAction(state, action[0], action[1], action[2])]
+                print("Filtered actions: ", actions)
+                
+                adjacentActions = [action for action in actions if self.checkIfAdjacent(state, action[0], action[1])[0]]
+                print("Adjacent actions: ", adjacentActions)
+                
+                if adjacentActions != []:    
+                    row, col = adjacentActions[-1][0], adjacentActions[-1][1]
+                    for action in adjacentActions:
+                        if row == action[0] and col == action[1]:
+                            ac.append(action)
+                            
+                elif actions != []:
+                    row, col = actions[-1][0], actions[-1][1]
+                    for action in actions:
+                        if row == action[0] and col == action[1]:
+                            ac.append(action)
+                
+                
+            
                 ac.sort(key=lambda x: countConnectionsAround(x[0], x[1], x[2]))
-                print("Actions: ", ac, "\n")
+                print("Final actions: ", ac)
                 return ac
                     
-                        
+                    
         
-        print("Actions: ", actions, "\n")
-        return actions    
+        print("Actions: ", actions)
+        return actions 
+    
+    
+    def checkIfAdjacent(self, state, row, col):
+        if state.moved != []:
+            r, c = state.moved[-1]
+            if (abs(row - r) == 1 and col == c) or (abs(col - c) == 1 and row == r):
+                return (True, (r, c))
+        return (False, None)
+    
+    
+    def removeAction(self, state, row: int, col: int, orientation: str):
+        
+        board = state.board
+        leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
+        upPiece, downPiece = board.adjacent_vertical_values(row, col)
+        
+        
+        openings = {
+            "FE": {"left": leftPiece},
+            "FD": {"right": rightPiece},
+            "FC": {"up": upPiece},
+            "FB": {"down": downPiece},
+            "LV": {"up": upPiece, "down": downPiece},
+            "LH": {"left": leftPiece, "right": rightPiece},
+            "BB": {"down": downPiece, "left": leftPiece, "right": rightPiece},
+            "BC": {"up": upPiece, "right": rightPiece, "left": leftPiece},
+            "BD": {"down": downPiece, "right": rightPiece, "up": upPiece},
+            "BE": {"down": downPiece, "left": leftPiece, "up": upPiece},
+            "VC": {"up": upPiece, "left": leftPiece},
+            "VD": {"up": upPiece, "right": rightPiece},
+            "VE": {"down": downPiece, "left": leftPiece},
+            "VB": {"down": downPiece, "right": rightPiece}
+        }
+        
+        directions = {
+            (0, 1): "left",
+            (0, -1): "right",
+            (1, 0): "up",
+            (-1, 0): "down"
+        }
+        
+        adjacent = self.checkIfAdjacent(state, row, col)
+        
+        if adjacent[0]:
+            r, c = adjacent[1]
+            if Piece(orientation).isConnected(board.getPiece(r, c), directions[(row - r, col - c)]):
+                return True
+            if Piece(orientation).isIncoming(board.getPiece(r, c), directions[(row - r, col - c)]):
+                return False
+            if Piece(orientation).notIncoming(board.getPiece(r, c), directions[(row - r, col - c)]):
+                return False
+    
+            
+            
+    
+        for side, piece in openings[orientation].items():
+            if piece != None and not piece.isLocked():
+                if not Piece(orientation).isConnected(piece, side):
+                    return False
+       
+        
+        return True
+                
     
 
     def result(self, state: PipeManiaState, action):
@@ -1011,31 +1089,33 @@ class PipeMania(Problem):
         self.actions(state)."""
         
         board = state.board.copy()
-        
-        row, col, orientation, isLocked = action
-        
-        moved = copy.deepcopy(state.moved)
-        moved.append((row, col))
+        print("Action: ", action)
+        for move in action[0]:
+            row, col, orientation, isLocked = move
 
-        board.change_piece_orientation(row, col, orientation)
-        leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
-        upPiece, downPiece = board.adjacent_vertical_values(row, col)
-        
-        board.updateConnections(row, col)
-        board.updateConnections(row+1, col)
-        board.updateConnections(row-1, col)
-        board.updateConnections(row, col+1)
-        board.updateConnections(row, col-1)
-        if isLocked:
-            board.lockPiece(row, col)
-            if upPiece != None and board.checkIfLocks(row-1, col, upPiece.getOrientation()):
-                board.lockPiece(row-1, col)
-            if downPiece != None and board.checkIfLocks(row+1, col, downPiece.getOrientation()):
-                board.lockPiece(row+1, col)
-            if leftPiece != None and board.checkIfLocks(row, col-1, leftPiece.getOrientation()):
-                board.lockPiece(row, col-1)
-            if rightPiece != None and board.checkIfLocks(row, col+1, rightPiece.getOrientation()):
-                board.lockPiece(row, col+1)
+            moved = copy.deepcopy(state.moved)
+            if not isLocked:
+                moved.append((row, col))
+
+            board.change_piece_orientation(row, col, orientation)
+            leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
+            upPiece, downPiece = board.adjacent_vertical_values(row, col)
+            
+            board.updateConnections(row, col)
+            board.updateConnections(row+1, col)
+            board.updateConnections(row-1, col)
+            board.updateConnections(row, col+1)
+            board.updateConnections(row, col-1)
+            if isLocked:
+                board.lockPiece(row, col)
+                if upPiece != None and board.checkIfLocks(row-1, col, upPiece.getOrientation()):
+                    board.lockPiece(row-1, col)
+                if downPiece != None and board.checkIfLocks(row+1, col, downPiece.getOrientation()):
+                    board.lockPiece(row+1, col)
+                if leftPiece != None and board.checkIfLocks(row, col-1, leftPiece.getOrientation()):
+                    board.lockPiece(row, col-1)
+                if rightPiece != None and board.checkIfLocks(row, col+1, rightPiece.getOrientation()):
+                    board.lockPiece(row, col+1)
 
         
         return PipeManiaState(board, moved)
@@ -1147,7 +1227,14 @@ class PipeMania(Problem):
                 if piece.isLocked():
                     continue
                 
-                heuristicScore += piece.getConnections()
+                heuristicScore += piece.getConnections() 
+                
+                heuristicScore -= (piece.getMaxConnections() - piece.getConnections()) * 0.2
+                
+                if not piece.isAllConnected():
+                    heuristicScore -= 0.2
+                
+             
                 
                 if checkIslands(row, col):
                     heuristicScore -= 1000
@@ -1162,7 +1249,7 @@ if __name__ == "__main__":
     board = Board.parse_instance()
     problem = PipeMania(board)
 
-    goal_node = astar_search(problem)
+    goal_node = depth_first_tree_search(problem)
 
     print(goal_node.state.board)
     
