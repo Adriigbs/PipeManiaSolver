@@ -815,7 +815,8 @@ class PipeMania(Problem):
             return actions
                     
         if la == []:
-         
+            finalLocked = []
+            
             for row in range(len(state.board.grid)):
                 for col in range(len(state.board.grid[row])):
                     piece = board.getPiece(row, col)
@@ -906,26 +907,26 @@ class PipeMania(Problem):
                     if piece.type() == "F":
                         if connects["up"]:
                             actions.append((row, col, "FC", True))
-                            break
+                            continue
                         if connects["down"]:
                             actions.append((row, col, "FB", True))
-                            break
+                            continue
                         if connects["left"]:
                             actions.append((row, col, "FE", True))
-                            break
+                            continue
                         if connects["right"]:
                             actions.append((row, col, "FD", True))
-                            break
+                            continue
                         
                         actions.extend(board.fechoPossibleActions(row, col, state.moved))
                     
                     elif piece.type() == "L":
                         if connects["up"] or connects["down"] or notConnects["left"] or notConnects["right"]:
                             lock_actions.append((row, col, "LV", True))
-                            break
+                            continue
                         if connects["left"] or connects["right"] or notConnects["up"] or notConnects["down"]:
                             lock_actions.append((row, col, "LH", True))
-                            break
+                            continue
 
                         
                         actions.extend(board.ligacaoPossibleActions(row, col, state.moved))
@@ -933,16 +934,17 @@ class PipeMania(Problem):
                     elif piece.type() == "B":
                         if (connects["up"] and connects["left"] and connects["right"]) or notConnects["down"]:
                             lock_actions.append((row, col, "BC", True))
-                            break
+                            continue
                         if (connects["down"] and connects["left"] and connects["right"]) or notConnects["up"]:
                             lock_actions.append((row, col, "BB", True))
-                            break
+                            continue
                         if (connects["right"] and connects["up"] and connects["down"]) or notConnects["left"]:
                             lock_actions.append((row, col, "BD", True))
-                            break
+                            continue
                         if (connects["left"] and connects["up"] and connects["down"]) or notConnects["right"]:
                             lock_actions.append((row, col, "BE", True))
-                            break 
+                            continue
+                        
                         actions.extend(board.bifurcationPossibleActions(row, col, state.moved))
                     
                     elif piece.type() == "V":
@@ -951,25 +953,25 @@ class PipeMania(Problem):
                             (connects["up"] and notConnects["right"]) or \
                             (notConnects["down"] and notConnects["right"]):
                             lock_actions.append((row, col, "VC", True))
-                            break
+                            continue
                         if (connects["up"] and connects["right"]) or \
                             (connects["right"] and notConnects["down"]) or \
                             (connects["up"] and notConnects["left"]) or \
                             (notConnects["down"] and notConnects["left"]):
                             lock_actions.append((row, col, "VD", True))
-                            break
+                            continue
                         if (connects["down"] and connects["left"]) or \
                             (connects["left"] and notConnects["up"]) or \
                             (connects["down"] and notConnects["right"]) or \
                             (notConnects["up"] and notConnects["right"]):
                             lock_actions.append((row, col, "VE", True))
-                            break
+                            continue
                         if (connects["down"] and connects["right"]) or \
                             (connects["right"] and notConnects["up"]) or \
                             (connects["down"] and notConnects["left"]) or \
                             (notConnects["up"] and notConnects["left"]):
                             lock_actions.append((row, col, "VB", True))
-                            break
+                            continue
                         actions.extend(board.voltaPossibleActions(row, col, state.moved))
                     
                   
@@ -980,20 +982,22 @@ class PipeMania(Problem):
                         
                 
                 if lock_actions != []:
-                    return lock_actions
+                    finalLocked.append([lock_actions])
+                    return finalLocked
                 
            
             
             if actions != []:
+                retActions = []
+                print("Actions: ", actions, "\n")
                 actions.sort(key=lambda x: countLockedAround(x[0], x[1]))
-                print("Actions: ", actions)
                 ac = []
                 
                 actions = [action for action in actions if self.removeAction(state, action[0], action[1], action[2])]
-                print("Filtered actions: ", actions)
+                print("Filtered actions: ", actions, "\n")
                 
                 adjacentActions = [action for action in actions if self.checkIfAdjacent(state, action[0], action[1])[0]]
-                print("Adjacent actions: ", adjacentActions)
+                print("Adjacent actions: ", adjacentActions, "\n")
                 
                 if adjacentActions != []:    
                     row, col = adjacentActions[-1][0], adjacentActions[-1][1]
@@ -1010,13 +1014,20 @@ class PipeMania(Problem):
                 
             
                 ac.sort(key=lambda x: countConnectionsAround(x[0], x[1], x[2]))
-                print("Final actions: ", ac)
-                return ac
+                print("Final actions: ", ac, "\n")
+                
+                
+                if ac == []:
+                    return ac
+                
+                retActions.append([ac])
+                print("RetActions: ", retActions, "\n")
+                return retActions
                     
                     
         
         print("Actions: ", actions)
-        return actions 
+        return actions
     
     
     def checkIfAdjacent(self, state, row, col):
@@ -1090,6 +1101,8 @@ class PipeMania(Problem):
         
         board = state.board.copy()
         print("Action: ", action)
+        
+        
         for move in action[0]:
             row, col, orientation, isLocked = move
 
