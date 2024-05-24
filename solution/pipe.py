@@ -29,7 +29,14 @@ class PipeManiaState:
         self.board = board
         self.id = PipeManiaState.state_id
         self.moved = moved
+        self.removed = []
         PipeManiaState.state_id += 1
+    
+    def emptyRemoved(self):
+        self.removed = []
+        
+    def addRemoved(self, row, col):
+        self.removed.append((row, col))
 
     def __lt__(self, other):
         return self.id < other.id
@@ -564,7 +571,6 @@ class Piece:
         type = self.orientation[0]
         return { "B": 3, "V": 2, "F": 1, "L": 2 }[type]
     
-    
     def updateConnections(self, value: int):
         self.connections = value
     
@@ -578,6 +584,7 @@ class Piece:
     
     def type(self):
         return self.orientation[0]
+    
     
     def isConnected(self, piece, direction):
         if self.orientation.startswith("F") and piece.orientation.startswith("F"):
@@ -595,12 +602,24 @@ class Piece:
         
         return piece.orientation in self.connectWith[direction]
     
-    def isIncoming(self, piece, direction):
-        return piece.orientation in self.connectWith[direction] and self.orientation not in self.openTo[direction]
+    def evaluateConnection(self, piece, direction):
+        if self.isConnected(piece, direction):
+            return True
+        if self.openToNotOpen(piece, direction):
+            return False
+        if self.notOpenToOpen(piece, direction):
+            return False
+        if self.notOpenToNotOpen(piece, direction):
+            return True
+
+    def openToNotOpen(self, piece, direction):
+        return self.orientation in self.openTo[direction] and piece.orientation not in self.connectWith[direction]
     
-    def notIncoming(self, piece, direction):
-        return piece.orientation not in self.connectWith[direction] and self.orientation in self.openTo[direction]
-            
+    def notOpenToOpen(self, piece, direction):
+        return self.orientation not in self.openTo[direction] and piece.orientation in self.connectWith[direction]
+    
+    def notOpenToNotOpen(self, piece, direction):
+        return self.orientation not in self.openTo[direction] and piece.orientation not in self.connectWith[direction]
         
     def __str__(self):
         return self.orientation
@@ -615,16 +634,7 @@ class PipeMania(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
         initial = PipeManiaState(board)
-        self.visited = []
-        self.counter = 0
         super().__init__(initial)
-
-    
-    def isVisited(self, board: Board):
-        for visited in self.visited:
-            if visited.compare(board):
-                return True
-        return False
 
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -633,10 +643,7 @@ class PipeMania(Problem):
         actions = []
         lock_actions = []
         board = state.board
-    
-        print("Expanding state", state.id, "\n")  
-        print(board, "\n")
-        
+
         def countLockedAround(row, col):
             leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
             upPiece, downPiece = board.adjacent_vertical_values(row, col)
@@ -740,20 +747,24 @@ class PipeMania(Problem):
             
             return count
         
+      
+        # FIRST STEP: Check for actions that are imediate and lock the piece, return all of them so that they can be all applied at the same time
+        # This makes the algorithm much faster 
         la = []
-        
         for row in range(len(state.board.grid)):
             for col in range(len(state.board.grid[row])):
                 
                 piece = board.getPiece(row, col)
                 
+                # Lock pieces that might have not been locked yet
                 if board.checkIfLocks(row, col, piece.getOrientation()):
                     board.lockPiece(row, col)
                 
-                
+                # If the piece is locked, we can't do anything with it
                 if piece.isLocked():
                     continue
                 
+                # Check for locked pieces if the piece is a fecho
                 if piece.type() == "F":
                     if board.checkIfLocks(row, col, "FB"):
                         la.append((row, col, "FB", True))
@@ -768,6 +779,7 @@ class PipeMania(Problem):
                         la.append((row, col, "FC", True))
                         continue
             
+                # Check for locked pieces if the piece is a ligacao
                 elif piece.type() == "L":
                     if board.checkIfLocks(row, col, "LV"):
                         la.append((row, col, "LV", True))
@@ -776,6 +788,7 @@ class PipeMania(Problem):
                         la.append((row, col, "LH", True))
                         continue
                 
+                # Check for locked pieces if the piece is a bifurcation
                 elif piece.type() == "B":
                     if board.checkIfLocks(row, col, "BB"):
                         la.append((row, col, "BB", True))
@@ -790,7 +803,7 @@ class PipeMania(Problem):
                         la.append((row, col, "BE", True))
                         continue
                     
-                    
+                # Check for locked pieces if the piece is a volta
                 elif piece.type() == "V":
                     if board.checkIfLocks(row, col, "VB"):
                         la.append((row, col, "VB", True))
@@ -805,16 +818,19 @@ class PipeMania(Problem):
                         la.append((row, col, "VE", True))
                         continue
                         
-                
+                # Remove the action if it is the same as the current  piece
                 if (row, col, piece, True) in la:
                     la.remove((row, col, piece, True))
                 
+        # If there are locked pieces, return all locked pieces
         if la != []:
             actions.append([la])
-            print("LA: ", la, "\n")
             return actions
-                    
+        
+        # If there are no locked pieces, we can proceed to the next step
+        # Check for possible actions      
         if la == []:
+         
             finalLocked = []
             
             for row in range(len(state.board.grid)):
@@ -977,34 +993,56 @@ class PipeMania(Problem):
                   
                     if (row, col, piece, True) in actions:
                         actions.remove((row, col, piece, True))
-                   
-                        
-                        
-                
+
+                # If there are locked pieces, return all the locked pieces so that they are all applied to the same state for more efficiency
                 if lock_actions != []:
                     finalLocked.append([lock_actions])
                     return finalLocked
                 
-           
-            
+        
             if actions != []:
-                retActions = []
-                print("Actions: ", actions, "\n")
+                # Sort actions by the number of locked pieces around the piece
                 actions.sort(key=lambda x: countLockedAround(x[0], x[1]))
                 ac = []
+                state.emptyRemoved()    # Empty the list of removed pieces from the previous state
                 
+                # Remove actions that are not possible to connect to the adjacent pieces so that useless actions are not taken
                 actions = [action for action in actions if self.removeAction(state, action[0], action[1], action[2])]
-                print("Filtered actions: ", actions, "\n")
                 
-                adjacentActions = [action for action in actions if self.checkIfAdjacent(state, action[0], action[1])[0]]
-                print("Adjacent actions: ", adjacentActions, "\n")
+                # If a position where actions were removed, there is no meaning in continuing the search in that branch
+                # Return an empty list of actions so that the search goes back to the previous state
+                for row, col in state.removed:
+                    leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
+                    upPiece, downPiece = board.adjacent_vertical_values(row, col)
+                    if ((leftPiece == None or leftPiece.isLocked()) or (row, col-1) in self.checkAdjacents(state, row, col)[1]) and \
+                        ((rightPiece == None or rightPiece.isLocked()) or (row, col+1) in self.checkAdjacents(state, row, col)[1]) and \
+                        ((upPiece == None or upPiece.isLocked()) or (row-1, col) in self.checkAdjacents(state, row, col)[1]) and \
+                        ((downPiece == None or downPiece.isLocked()) or (row+1, col) in self.checkAdjacents(state, row, col)[1]):
+                        
+                        inActions = False
+                        for action in actions:
+                            if row == action[0] and col == action[1]:
+                                inActions = True
+                                break
+                        
+                        if not inActions:
+                            return []
+
+
+                adjacentActions = []
                 
+                # Filter actions for actions that are adjacent to the last piece moved so that the search is more efficient
+                if state.moved != []:
+                    adjacentActions = [action for action in actions if self.isAdjacent(action[0], action[1], state.moved[-1][0], state.moved[-1][1])]
+                
+                # Add only the actions of one position so that the search is more efficient
+                # This doesn't create useless branches in the search tree
                 if adjacentActions != []:    
                     row, col = adjacentActions[-1][0], adjacentActions[-1][1]
                     for action in adjacentActions:
                         if row == action[0] and col == action[1]:
                             ac.append(action)
-                            
+                
                 elif actions != []:
                     row, col = actions[-1][0], actions[-1][1]
                     for action in actions:
@@ -1012,87 +1050,57 @@ class PipeMania(Problem):
                             ac.append(action)
                 
                 
-            
+                # Sort the actions by the number of connections around the piece
                 ac.sort(key=lambda x: countConnectionsAround(x[0], x[1], x[2]))
-                print("Final actions: ", ac, "\n")
-                
-                
-                if ac == []:
-                    return ac
-                
-                retActions.append([ac])
-                print("RetActions: ", retActions, "\n")
-                return retActions
-                    
-                    
-        
-        print("Actions: ", actions)
-        return actions
+                return ac
+
+        # Return empty actions
+        return actions 
     
     
-    def checkIfAdjacent(self, state, row, col):
+    def isAdjacent(self, r1, c1, r2, c2):
+        """Returns if two pieces are adjacent."""
+        return (abs(r1 - r2) == 1 and c1 == c2) or (abs(c1 - c2) == 1 and r1 == r2)
+    
+    def checkAdjacents(self, state, row, col):
+        """Check all adjecent pieces to the piece in the position (row, col) and returns if they are adjecent and a list of the adjecent pieces."""
+        adjacent = []
+        areAdjecent = False
         if state.moved != []:
-            r, c = state.moved[-1]
-            if (abs(row - r) == 1 and col == c) or (abs(col - c) == 1 and row == r):
-                return (True, (r, c))
-        return (False, None)
+            for r, c in state.moved:
+                if self.isAdjacent(row, col, r, c):
+                    areAdjecent = True
+                    adjacent.append((r, c))
+        
+        return (areAdjecent, adjacent)
     
     
     def removeAction(self, state, row: int, col: int, orientation: str):
-        
+        """Removes a piece from the available actions if it is not possible to connect it to the adjacent pieces
+        that were previously moved in the current branch of the tree."""
         board = state.board
-        leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
-        upPiece, downPiece = board.adjacent_vertical_values(row, col)
-        
-        
-        openings = {
-            "FE": {"left": leftPiece},
-            "FD": {"right": rightPiece},
-            "FC": {"up": upPiece},
-            "FB": {"down": downPiece},
-            "LV": {"up": upPiece, "down": downPiece},
-            "LH": {"left": leftPiece, "right": rightPiece},
-            "BB": {"down": downPiece, "left": leftPiece, "right": rightPiece},
-            "BC": {"up": upPiece, "right": rightPiece, "left": leftPiece},
-            "BD": {"down": downPiece, "right": rightPiece, "up": upPiece},
-            "BE": {"down": downPiece, "left": leftPiece, "up": upPiece},
-            "VC": {"up": upPiece, "left": leftPiece},
-            "VD": {"up": upPiece, "right": rightPiece},
-            "VE": {"down": downPiece, "left": leftPiece},
-            "VB": {"down": downPiece, "right": rightPiece}
-        }
-        
+
         directions = {
-            (0, 1): "left",
-            (0, -1): "right",
-            (1, 0): "up",
-            (-1, 0): "down"
+            (0, 1): "right",
+            (0, -1): "left",
+            (1, 0): "down",
+            (-1, 0): "up"
         }
         
-        adjacent = self.checkIfAdjacent(state, row, col)
+        adjacent = self.checkAdjacents(state, row, col)
         
         if adjacent[0]:
-            r, c = adjacent[1]
-            if Piece(orientation).isConnected(board.getPiece(r, c), directions[(row - r, col - c)]):
+            conns = []
+            for r, c in adjacent[1]:
+                conns.append(Piece(orientation).evaluateConnection(board.getPiece(r, c), directions[(r-row, c-col)]))
+            if all(conns):
                 return True
-            if Piece(orientation).isIncoming(board.getPiece(r, c), directions[(row - r, col - c)]):
-                return False
-            if Piece(orientation).notIncoming(board.getPiece(r, c), directions[(row - r, col - c)]):
-                return False
-    
-            
-            
-    
-        for side, piece in openings[orientation].items():
-            if piece != None and not piece.isLocked():
-                if not Piece(orientation).isConnected(piece, side):
-                    return False
-       
+            state.addRemoved(row, col)
+            return False
         
         return True
                 
     
-
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
@@ -1100,25 +1108,36 @@ class PipeMania(Problem):
         self.actions(state)."""
         
         board = state.board.copy()
-        print("Action: ", action)
+        acList = []
         
-        
-        for move in action[0]:
+        # Verifica se recebeu uma ação que não dá lock ou uma lista de ações imeadiatas 
+        if isinstance(action[0], list):
+            acList = action[0]
+        else:
+            acList.append(action)
+            
+        for move in acList:
             row, col, orientation, isLocked = move
 
+
+            # Add to moved list if it is not locked so that a piece is not moved twice
             moved = copy.deepcopy(state.moved)
             if not isLocked:
                 moved.append((row, col))
 
+            # Apply the action to the board
             board.change_piece_orientation(row, col, orientation)
             leftPiece, rightPiece = board.adjacent_horizontal_values(row, col)
             upPiece, downPiece = board.adjacent_vertical_values(row, col)
             
+            # Update connections of the adjecent pieces
             board.updateConnections(row, col)
             board.updateConnections(row+1, col)
             board.updateConnections(row-1, col)
             board.updateConnections(row, col+1)
             board.updateConnections(row, col-1)
+            
+            # If piece is set to be locked, lock it and lock the adjecent pieces if they are locked
             if isLocked:
                 board.lockPiece(row, col)
                 if upPiece != None and board.checkIfLocks(row-1, col, upPiece.getOrientation()):
@@ -1133,13 +1152,13 @@ class PipeMania(Problem):
         
         return PipeManiaState(board, moved)
 
-
     def goal_test(self, state: PipeManiaState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
         visitedPos = []
         
+        # Sides to where a piece can connect so that dfs can follow all paths
         openings = {
             "FC": [(-1, 0)],
             "FD": [(0, 1)],
@@ -1157,6 +1176,8 @@ class PipeMania(Problem):
             "LH": [(0, -1), (0, 1)],	
         }
         
+        
+        # Check if all pieces have all connections
         for row in range(len(state.board.grid)):
             r = []
             for col in range(len(state.board.grid[row])):
@@ -1165,12 +1186,14 @@ class PipeMania(Problem):
                 if not piece.isAllConnected():
                     return False
             visitedPos.append(r)
-            
-        stack = [(0, 0)]
-        
+           
+           
         def in_bounds(x, y):
             return x >= 0 and x < len(state.board.grid) and y >= 0 and y < len(state.board.grid[x])
-        
+            
+            
+        # If all pieces are connected, check if there is an island in the board
+        stack = [(0, 0)]        
         while stack:
             x, y = stack.pop()
             if visitedPos[x][y]:
@@ -1183,7 +1206,8 @@ class PipeMania(Problem):
                 if in_bounds(nx, ny) and not visitedPos[nx][ny]:
                     stack.append((nx, ny))
                 
-        
+        # If there is an island, return False
+        # If there is no island, return True and goal is reached
         return all(all(row) for row in visitedPos)
 
 
@@ -1192,26 +1216,29 @@ class PipeMania(Problem):
         state = node.state
         heuristicScore = 0    
         
+        # Sides to where a piece can connect so that dfs can follow all paths
         openings = {
-            "FC": [(-1, 0)],
-            "FD": [(0, 1)],
-            "FE": [(0, -1)],
-            "FB": [(1, 0)],
-            "VC": [(-1, 0), (0, -1)],
-            "VD": [(0, 1), (-1, 0)],
-            "VE": [(0, -1), (1, 0)],
-            "VB": [(1, 0), (0, 1)],
-            "BB": [(1, 0), (0, 1), (0, -1)],
-            "BC": [(0, 1), (0, -1), (-1, 0)],
-            "BD": [(0, 1), (-1, 0), (1, 0)],
-            "BE": [(0, -1), (1, 0), (-1, 0)],
-            "LV": [(-1, 0), (1, 0)],
-            "LH": [(0, -1), (0, 1)],	
+            "FC": [(-1, 0)],                        # Up
+            "FD": [(0, 1)],                         # Right
+            "FE": [(0, -1)],                        # Left              
+            "FB": [(1, 0)],                         # Down
+            "VC": [(-1, 0), (0, -1)],               # Up, Left
+            "VD": [(0, 1), (-1, 0)],                # Right, Up
+            "VE": [(0, -1), (1, 0)],                # Left, Down
+            "VB": [(1, 0), (0, 1)],                 # Down, Right
+            "BB": [(1, 0), (0, 1), (0, -1)],        # Down, Right, Left
+            "BC": [(0, 1), (0, -1), (-1, 0)],       # Right, Left, Up
+            "BD": [(0, 1), (-1, 0), (1, 0)],        # Right, Up, Down
+            "BE": [(0, -1), (1, 0), (-1, 0)],       # Left, Down, Up
+            "LV": [(-1, 0), (1, 0)],                # Up, Down
+            "LH": [(0, -1), (0, 1)],	            # Left, Right
         }
-          
+        
+        # Check if a coordinate is inside the board
         def in_bounds(x, y):
             return x >= 0 and x < len(state.board.grid) and y >= 0 and y < len(state.board.grid[x])   
         
+        # Checks if there is an island in the board starting from the given position
         def checkIslands(row, col):
             visitedPos = []
             
@@ -1229,9 +1256,6 @@ class PipeMania(Problem):
                 
             if len(visitedPos) != (len(state.board.grid[0]) * len(state.board.grid)):
                 return True
-        
-        
-        
             
         for row in range(len(state.board.grid)):
             for col in range(len(state.board.grid[row])):
@@ -1241,19 +1265,14 @@ class PipeMania(Problem):
                     continue
                 
                 heuristicScore += piece.getConnections() 
-                
                 heuristicScore -= (piece.getMaxConnections() - piece.getConnections()) * 0.2
                 
                 if not piece.isAllConnected():
                     heuristicScore -= 0.2
-                
-             
-                
+
                 if checkIslands(row, col):
                     heuristicScore -= 1000
-                
-             
-                
+  
         return - heuristicScore
         
 
