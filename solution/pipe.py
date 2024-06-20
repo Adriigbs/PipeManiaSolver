@@ -8,7 +8,6 @@
 # 99131 Vasco Roda Félix
 
 import sys
-import random
 import copy
 from sys import stdin
 from search import (
@@ -117,23 +116,16 @@ class Board:
         
 
     @staticmethod
-    def parse_instance():
+    def parse_instance(path):
         """Lê a instância do problema do standard input (stdin)
         e retorna uma instância da classe Board."""
 
         board = Board()
 
-        lines = stdin.readlines()
-        for line in lines:
-            line = line.strip()
-            
-            row = []
-            
-            for piece in line.split():
-                row.append(Piece(piece))
-               
-            
-            board.grid.append(row)
+        with open(path, "r") as f:
+            for line in f:
+                row = line.strip().split()
+                board.grid.append([Piece(piece) for piece in row])
 
         for row in range(len(board.grid)):
             for col in range(len(board.grid[row])):
@@ -624,12 +616,15 @@ class Piece:
     def __str__(self):
         return self.orientation
     
+    def str(self):
+        return self.orientation
+    
     
 
 
 class PipeMania(Problem):
 
-
+    boards = []
 
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
@@ -1156,6 +1151,9 @@ class PipeMania(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
+
+        self.boards.append(state.board.grid)
+
         visitedPos = []
         
         # Sides to where a piece can connect so that dfs can follow all paths
@@ -1274,6 +1272,7 @@ class PipeMania(Problem):
                     heuristicScore -= 1000
   
         return - heuristicScore
+
         
 
 if __name__ == "__main__":
